@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/study_bg"
+    android:orientation="vertical"
+    android:padding="@dimen/screen_padding">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/backSummary"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center_vertical"
+            android:text="← 요약"
+            android:textColor="@color/study_text_muted"
+            android:textSize="18sp" />
+
+        <TextView
+            android:id="@+id/quizProgressText"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:gravity="center_vertical"
+            android:text="1/3"
+            android:textColor="@color/study_text"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/questionText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="52dp"
+        android:textColor="@color/study_text"
+        android:textSize="25sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/optionOne"
+        android:layout_width="match_parent"
+        android:layout_height="70dp"
+        android:layout_marginTop="32dp"
+        android:background="@drawable/bg_option"
+        android:gravity="center_vertical"
+        android:paddingHorizontal="18dp"
+        android:textColor="@color/study_text"
+        android:textSize="18sp" />
+
+    <TextView
+        android:id="@+id/optionTwo"
+        android:layout_width="match_parent"
+        android:layout_height="70dp"
+        android:layout_marginTop="12dp"
+        android:background="@drawable/bg_option"
+        android:gravity="center_vertical"
+        android:paddingHorizontal="18dp"
+        android:textColor="@color/study_text"
+        android:textSize="18sp" />
+
+    <TextView
+        android:id="@+id/optionThree"
+        android:layout_width="match_parent"
+        android:layout_height="70dp"
+        android:layout_marginTop="12dp"
+        android:background="@drawable/bg_option"
+        android:gravity="center_vertical"
+        android:paddingHorizontal="18dp"
+        android:textColor="@color/study_text"
+        android:textSize="18sp" />
+
+    <TextView
+        android:id="@+id/optionFour"
+        android:layout_width="match_parent"
+        android:layout_height="70dp"
+        android:layout_marginTop="12dp"
+        android:background="@drawable/bg_option"
+        android:gravity="center_vertical"
+        android:paddingHorizontal="18dp"
+        android:textColor="@color/study_text"
+        android:textSize="18sp" />
+
+    <Space
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+
+    <Button
+        android:id="@+id/nextQuizButton"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/button_height"
+        android:background="@drawable/bg_button_primary"
+        android:enabled="false"
+        android:text="다음 문제"
+        android:textAllCaps="false"
+        android:textColor="@color/study_primary_text"
+        android:textSize="18sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="14dp"
+        android:gravity="center"
+        android:text="※ 보기를 선택해야 다음 버튼이 활성화됩니다."
+        android:textColor="@color/study_text_muted"
+        android:textSize="14sp" />
+</LinearLayout>

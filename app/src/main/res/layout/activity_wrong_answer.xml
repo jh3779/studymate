@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/study_bg"
+    android:orientation="vertical">
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="@dimen/screen_padding">
+
+            <TextView
+                android:id="@+id/backResult"
+                android:layout_width="wrap_content"
+                android:layout_height="48dp"
+                android:gravity="center_vertical"
+                android:text="← 결과"
+                android:textColor="@color/study_text_muted"
+                android:textSize="18sp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="18dp"
+                android:text="오답노트"
+                android:textColor="@color/study_text"
+                android:textSize="28sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="데이터베이스 기본키 정리"
+                android:textColor="@color/study_text_muted"
+                android:textSize="17sp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:background="@drawable/bg_card"
+                android:padding="@dimen/card_padding"
+                android:text="Q3. 기본키의 개수 제한은?\n\n✕ 내 답: 여러 개 존재 가능\n✓ 정답: 테이블당 하나만 존재\n\n하나의 테이블에는 기본키가 반드시 하나만 존재합니다. 개체 무결성 원칙에 의한 제약입니다."
+                android:textColor="@color/study_text"
+                android:textSize="17sp"
+                android:lineSpacingExtra="6dp" />
+
+            <Button
+                android:id="@+id/retryQuizButton"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginTop="24dp"
+                android:background="@drawable/bg_button_secondary"
+                android:text="다시 풀기"
+                android:textAllCaps="false"
+                android:textColor="@color/study_text"
+                android:textSize="16sp" />
+        </LinearLayout>
+    </ScrollView>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="72dp"
+        android:background="@color/study_surface"
+        android:gravity="center"
+        android:orientation="horizontal"
+        android:weightSum="3">
+
+        <TextView
+            android:id="@+id/wrongHomeTab"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="홈"
+            android:textColor="@color/study_text_muted" />
+
+        <TextView
+            android:id="@+id/wrongCurrentTab"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="오답노트"
+            android:textColor="@color/study_text"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/wrongMyPageTab"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="마이페이지"
+            android:textColor="@color/study_text_muted" />
+    </LinearLayout>
+</LinearLayout>

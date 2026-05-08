@@ -31,16 +31,19 @@
 담당 파일 예시는 다음과 같다.
 
 ```text
-lib/app.dart
-lib/screens/splash_screen.dart
-lib/screens/home_screen.dart
-lib/widgets/common_button.dart
-lib/widgets/study_card.dart
-lib/widgets/loading_dialog.dart
+app/src/main/AndroidManifest.xml
+app/src/main/java/com/example/studymate/SplashActivity.java
+app/src/main/java/com/example/studymate/HomeActivity.java
+app/src/main/java/com/example/studymate/BaseActivity.java
+app/src/main/res/layout/activity_splash.xml
+app/src/main/res/layout/activity_home.xml
+app/src/main/res/drawable/
 docs/03_design/screen_flow.md
 docs/03_design/screen_spec.md
 docs/07_presentation/
 ```
+
+우지훈의 세부 작업 우선순위와 진행 상태는 [우지훈 작업 우선도](woo_jihun_priority_tasks.md)를 기준으로 관리한다.
 
 ### 최백도: Firebase / Auth / DB
 
@@ -56,11 +59,10 @@ docs/07_presentation/
 담당 파일 예시는 다음과 같다.
 
 ```text
-lib/models/
-lib/services/auth_service.dart
-lib/services/firestore_service.dart
-lib/providers/auth_provider.dart
-lib/utils/constants.dart
+app/src/main/java/com/example/studymate/model/
+app/src/main/java/com/example/studymate/service/AuthService.java
+app/src/main/java/com/example/studymate/service/FirestoreService.java
+app/src/main/java/com/example/studymate/util/AppConstants.java
 docs/04_database/
 docs/05_api/api_security_notes.md
 ```
@@ -79,10 +81,11 @@ docs/05_api/api_security_notes.md
 담당 파일 예시는 다음과 같다.
 
 ```text
-lib/services/ai_service.dart
-lib/providers/study_provider.dart
-lib/screens/study_input_screen.dart
-lib/screens/summary_result_screen.dart
+app/src/main/java/com/example/studymate/service/AiService.java
+app/src/main/java/com/example/studymate/StudyInputActivity.java
+app/src/main/java/com/example/studymate/SummaryResultActivity.java
+app/src/main/res/layout/activity_study_input.xml
+app/src/main/res/layout/activity_summary_result.xml
 docs/03_design/ai_flow.md
 docs/05_api/ai_prompt_spec.md
 ```
@@ -101,13 +104,15 @@ docs/05_api/ai_prompt_spec.md
 담당 파일 예시는 다음과 같다.
 
 ```text
-lib/services/quiz_service.dart
-lib/providers/quiz_provider.dart
-lib/screens/quiz_screen.dart
-lib/screens/quiz_result_screen.dart
-lib/screens/wrong_answer_screen.dart
-lib/screens/my_page_screen.dart
-lib/widgets/quiz_option_card.dart
+app/src/main/java/com/example/studymate/service/QuizService.java
+app/src/main/java/com/example/studymate/QuizActivity.java
+app/src/main/java/com/example/studymate/QuizResultActivity.java
+app/src/main/java/com/example/studymate/WrongAnswerActivity.java
+app/src/main/java/com/example/studymate/MyPageActivity.java
+app/src/main/res/layout/activity_quiz.xml
+app/src/main/res/layout/activity_quiz_result.xml
+app/src/main/res/layout/activity_wrong_answer.xml
+app/src/main/res/layout/activity_my_page.xml
 docs/06_development/development_schedule.md
 docs/07_presentation/demo_scenario.md
 ```

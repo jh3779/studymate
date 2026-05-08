@@ -14,7 +14,7 @@
 | 4 | 대상 사용자 | 학생과 시험 대비 학습자가 주요 사용자다 |
 | 5 | 핵심 기능 | 로그인, 학습 입력, AI 요약, 퀴즈, 결과, 오답노트 |
 | 6 | 화면 흐름 | 입력부터 오답 복습까지 이어지는 모바일 플로우 |
-| 7 | 시스템 구조 | Flutter, Firebase, AI API 기반 구조 |
+| 7 | 시스템 구조 | Android Java, Firebase, AI API 기반 구조 |
 | 8 | DB 설계 | users, study_notes, quizzes, quiz_results, wrong_answers |
 | 9 | AI 프롬프트 | JSON 기반 요약 및 퀴즈 응답 설계 |
 | 10 | 개발 일정 | 8주 MVP 개발 계획 |

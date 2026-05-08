@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="study_bg">#1C1C1A</color>
+    <color name="study_surface">#2A2A28</color>
+    <color name="study_surface_alt">#22221F</color>
+    <color name="study_border">#555550</color>
+    <color name="study_text">#F6F4EE</color>
+    <color name="study_text_muted">#B8B5AD</color>
+    <color name="study_error">#FF817A</color>
+    <color name="study_success">#7ED957</color>
+    <color name="study_primary_button">#F7F5F0</color>
+    <color name="study_primary_text">#252522</color>
+</resources>

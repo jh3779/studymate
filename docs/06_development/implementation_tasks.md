@@ -23,10 +23,10 @@
 
 ### 1. 프로젝트 세팅
 
-- Flutter 프로젝트 생성
+- Android Java 프로젝트 생성
 - Firebase 프로젝트 생성
-- Android, iOS Firebase 설정 파일 연결
-- `lib/` 폴더 구조 생성
+- Android Firebase 설정 파일 연결
+- `app/src/main/java`, `app/src/main/res` 폴더 구조 생성
 - 공통 테마와 라우팅 설정
 
 ### 2. 인증 구현

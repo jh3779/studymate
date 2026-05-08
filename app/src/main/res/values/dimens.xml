@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="screen_padding">24dp</dimen>
+    <dimen name="section_gap">24dp</dimen>
+    <dimen name="card_padding">18dp</dimen>
+    <dimen name="button_height">56dp</dimen>
+    <dimen name="field_height">56dp</dimen>
+    <dimen name="radius_card">8dp</dimen>
+    <dimen name="radius_button">12dp</dimen>
+</resources>

@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/study_bg"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="@dimen/screen_padding">
+
+        <TextView
+            android:id="@+id/backHome"
+            android:layout_width="wrap_content"
+            android:layout_height="48dp"
+            android:gravity="center_vertical"
+            android:text="← 홈"
+            android:textColor="@color/study_text_muted"
+            android:textSize="18sp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="18dp"
+            android:text="학습 내용 입력"
+            android:textColor="@color/study_text"
+            android:textSize="30sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="28dp"
+            android:text="제목 *"
+            android:textColor="@color/study_text_muted"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <EditText
+            android:id="@+id/titleInput"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/field_height"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/bg_input"
+            android:hint="데이터베이스 기본키 정리"
+            android:inputType="text"
+            android:textColor="@color/study_text"
+            android:textColorHint="@color/study_text_muted" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:text="과목명"
+            android:textColor="@color/study_text_muted"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <EditText
+            android:id="@+id/subjectInput"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/field_height"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/bg_input"
+            android:hint="데이터베이스"
+            android:inputType="text"
+            android:textColor="@color/study_text"
+            android:textColorHint="@color/study_text_muted" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:text="학습 내용 *"
+            android:textColor="@color/study_text_muted"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <EditText
+            android:id="@+id/contentInput"
+            android:layout_width="match_parent"
+            android:layout_height="132dp"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/bg_input"
+            android:gravity="top"
+            android:hint="학습 내용을 30자 이상 입력해주세요."
+            android:inputType="textMultiLine"
+            android:paddingTop="14dp"
+            android:textColor="@color/study_text"
+            android:textColorHint="@color/study_text_muted" />
+
+        <TextView
+            android:id="@+id/inputErrorText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:textColor="@color/study_error"
+            android:textSize="15sp"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/loadingBox"
+            android:layout_width="match_parent"
+            android:layout_height="92dp"
+            android:layout_marginTop="20dp"
+            android:background="@drawable/bg_card"
+            android:gravity="center"
+            android:text="⏳ AI 요약 생성 중...\n잠시만 기다려주세요"
+            android:textColor="@color/study_text_muted"
+            android:textSize="16sp"
+            android:visibility="gone" />
+
+        <Button
+            android:id="@+id/generateSummaryButton"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/button_height"
+            android:layout_marginTop="20dp"
+            android:background="@drawable/bg_button_primary"
+            android:text="AI 요약 생성"
+            android:textAllCaps="false"
+            android:textColor="@color/study_primary_text"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:gravity="center"
+            android:text="개인정보나 민감한 정보는 학습 내용에 입력하지 않는 것을 권장합니다."
+            android:textColor="@color/study_text_muted"
+            android:textSize="13sp" />
+    </LinearLayout>
+</ScrollView>

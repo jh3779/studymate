@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/study_bg"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_horizontal"
+        android:orientation="vertical"
+        android:padding="@dimen/screen_padding">
+
+        <TextView
+            android:layout_width="88dp"
+            android:layout_height="88dp"
+            android:layout_marginTop="64dp"
+            android:background="@drawable/bg_logo"
+            android:contentDescription="StudyMate 앱 로고"
+            android:gravity="center"
+            android:text="S"
+            android:textColor="@color/study_primary_text"
+            android:textSize="36sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="StudyMate"
+            android:textColor="@color/study_text"
+            android:textSize="32sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="40dp"
+            android:text="이메일"
+            android:textColor="@color/study_text_muted"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <EditText
+            android:id="@+id/emailInput"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/field_height"
+            android:layout_marginTop="8dp"
+            android:autofillHints="emailAddress"
+            android:background="@drawable/bg_input"
+            android:hint="이메일 주소 입력"
+            android:inputType="textEmailAddress"
+            android:singleLine="true"
+            android:textColor="@color/study_text"
+            android:textColorHint="@color/study_text_muted" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:text="비밀번호"
+            android:textColor="@color/study_text_muted"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <EditText
+            android:id="@+id/passwordInput"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/field_height"
+            android:layout_marginTop="8dp"
+            android:autofillHints="password"
+            android:background="@drawable/bg_input"
+            android:hint="비밀번호 입력"
+            android:inputType="textPassword"
+            android:singleLine="true"
+            android:textColor="@color/study_text"
+            android:textColorHint="@color/study_text_muted" />
+
+        <TextView
+            android:id="@+id/loginErrorText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="⚠ 이메일 또는 비밀번호가 올바르지 않습니다."
+            android:textColor="@color/study_error"
+            android:textSize="15sp"
+            android:visibility="gone" />
+
+        <Button
+            android:id="@+id/loginButton"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/button_height"
+            android:layout_marginTop="24dp"
+            android:background="@drawable/bg_button_primary"
+            android:text="로그인"
+            android:textAllCaps="false"
+            android:textColor="@color/study_primary_text"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/signupLink"
+            android:layout_width="wrap_content"
+            android:layout_height="48dp"
+            android:layout_marginTop="18dp"
+            android:gravity="center"
+            android:text="계정이 없으신가요? 회원가입"
+            android:textColor="@color/study_text_muted"
+            android:textSize="16sp" />
+    </LinearLayout>
+</ScrollView>
