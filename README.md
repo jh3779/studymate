@@ -71,4 +71,5 @@ docs/
 - [개발 일정](docs/06_development/development_schedule.md)
 - [팀 작업 분담](docs/06_development/team_task_distribution.md)
 - [우지훈 작업 우선도](docs/06_development/woo_jihun_priority_tasks.md)
+- [코드 분석 및 작성 의도](docs/06_development/code_analysis_rationale.md)
 - [발표 구성](docs/07_presentation/presentation_outline.md)
