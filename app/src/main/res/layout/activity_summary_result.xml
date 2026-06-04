@@ -36,19 +36,19 @@
         </LinearLayout>
 
         <TextView
+            android:id="@+id/summaryTitle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="18dp"
-            android:text="데이터베이스 기본키 정리"
             android:textColor="@color/study_text"
             android:textSize="26sp"
             android:textStyle="bold" />
 
         <TextView
+            android:id="@+id/summarySubject"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="18dp"
-            android:text="과목: 데이터베이스"
             android:textColor="@color/study_text_muted"
             android:textSize="17sp" />
 
@@ -62,15 +62,15 @@
             android:textStyle="bold" />
 
         <TextView
+            android:id="@+id/summaryText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
             android:background="@drawable/bg_summary_box"
+            android:lineSpacingExtra="6dp"
             android:padding="@dimen/card_padding"
-            android:text="기본키는 각 행을 고유하게 식별하는 속성이다.\n중복 및 NULL 값을 허용하지 않는다.\n테이블당 하나만 존재하며 개체 무결성을 유지한다."
             android:textColor="@color/study_text"
-            android:textSize="18sp"
-            android:lineSpacingExtra="6dp" />
+            android:textSize="18sp" />
 
         <TextView
             android:layout_width="match_parent"
@@ -82,37 +82,23 @@
             android:textStyle="bold" />
 
         <LinearLayout
+            android:id="@+id/keywordsContainer"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
-            android:orientation="horizontal">
+            android:orientation="horizontal" />
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginEnd="8dp"
-                android:background="@drawable/bg_chip"
-                android:text="# 기본키"
-                android:textColor="@color/study_text"
-                android:textSize="16sp" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginEnd="8dp"
-                android:background="@drawable/bg_chip"
-                android:text="# 개체무결성"
-                android:textColor="@color/study_text"
-                android:textSize="16sp" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:background="@drawable/bg_chip"
-                android:text="# NULL불허"
-                android:textColor="@color/study_text"
-                android:textSize="16sp" />
-        </LinearLayout>
+        <TextView
+            android:id="@+id/quizLoadingBox"
+            android:layout_width="match_parent"
+            android:layout_height="92dp"
+            android:layout_marginTop="20dp"
+            android:background="@drawable/bg_card"
+            android:gravity="center"
+            android:text="⏳ AI 퀴즈 생성 중...\n잠시만 기다려주세요"
+            android:textColor="@color/study_text_muted"
+            android:textSize="16sp"
+            android:visibility="gone" />
 
         <Button
             android:id="@+id/createQuizButton"

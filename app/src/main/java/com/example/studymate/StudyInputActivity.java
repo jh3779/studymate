@@ -1,19 +1,24 @@
 package com.example.studymate;
 
+import android.content.Intent;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import com.example.studymate.service.AiService;
+
 public class StudyInputActivity extends BaseActivity {
+
     private EditText titleInput;
+    private EditText subjectInput;
     private EditText contentInput;
     private TextView errorText;
     private TextView loadingBox;
     private Button generateButton;
+
+    private final AiService aiService = new AiService();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -21,13 +26,11 @@ public class StudyInputActivity extends BaseActivity {
         setContentView(R.layout.activity_study_input);
 
         titleInput = findViewById(R.id.titleInput);
+        subjectInput = findViewById(R.id.subjectInput);
         contentInput = findViewById(R.id.contentInput);
         errorText = findViewById(R.id.inputErrorText);
         loadingBox = findViewById(R.id.loadingBox);
         generateButton = findViewById(R.id.generateSummaryButton);
-
-        titleInput.setText("데이터베이스 기본키 정리");
-        contentInput.setText("기본키는 데이터베이스 테이블에서 각 행을 고유하게 식별하기 위해 사용하는 속성이다. 기본키 값은 중복될 수 없으며 NULL 값을 가질 수 없다.");
 
         bindClick(R.id.backHome, v -> finish());
         bindClick(R.id.generateSummaryButton, v -> handleGenerateSummary());
@@ -35,6 +38,7 @@ public class StudyInputActivity extends BaseActivity {
 
     private void handleGenerateSummary() {
         String title = titleInput.getText().toString().trim();
+        String subject = subjectInput.getText().toString().trim();
         String content = contentInput.getText().toString().trim();
 
         if (title.isEmpty()) {
@@ -51,12 +55,30 @@ public class StudyInputActivity extends BaseActivity {
         generateButton.setEnabled(false);
         generateButton.setText("AI 요약 생성 중...");
 
-        // TODO: 윤재이 담당 AIService 요약 연동 시 더미 지연 처리를 교체한다.
-        new Handler(Looper.getMainLooper()).postDelayed(() -> {
-            generateButton.setEnabled(true);
-            generateButton.setText("AI 요약 생성");
-            goTo(SummaryResultActivity.class);
-        }, 700);
+        aiService.generateSummary(content, new AiService.SummaryCallback() {
+            @Override
+            public void onSuccess(AiService.SummaryResult result) {
+                loadingBox.setVisibility(View.GONE);
+                generateButton.setEnabled(true);
+                generateButton.setText("AI 요약 생성");
+
+                Intent intent = new Intent(StudyInputActivity.this, SummaryResultActivity.class);
+                intent.putExtra("title", title);
+                intent.putExtra("subject", subject.isEmpty() ? "" : subject);
+                intent.putExtra("content", content);
+                intent.putStringArrayListExtra("summary", new java.util.ArrayList<>(result.summary));
+                intent.putStringArrayListExtra("keywords", new java.util.ArrayList<>(result.keywords));
+                startActivity(intent);
+            }
+
+            @Override
+            public void onFailure(String errorMessage) {
+                loadingBox.setVisibility(View.GONE);
+                generateButton.setEnabled(true);
+                generateButton.setText("AI 요약 생성");
+                showError("⚠ " + errorMessage);
+            }
+        });
     }
 
     private void showError(String message) {
