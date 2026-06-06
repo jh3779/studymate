@@ -7,10 +7,7 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.example.studymate.model.QuizModel;
 import com.example.studymate.service.AiService;
-import com.example.studymate.service.AuthService;
-import com.example.studymate.service.FirestoreService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,8 +15,6 @@ import java.util.List;
 public class SummaryResultActivity extends BaseActivity {
 
     private final AiService aiService = new AiService();
-    private final AuthService authService = new AuthService();
-    private final FirestoreService firestoreService = new FirestoreService();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,81 +48,25 @@ public class SummaryResultActivity extends BaseActivity {
             aiService.generateQuizzes(quizSource, new AiService.QuizCallback() {
                 @Override
                 public void onSuccess(List<AiService.QuizItem> quizzes) {
-                    saveQuizzes(noteId, quizzes, createQuizButton, quizLoadingBox);
+                    quizLoadingBox.setVisibility(View.GONE);
+                    createQuizButton.setEnabled(true);
+                    createQuizButton.setText("퀴즈 생성하기");
+
+                    Intent quizIntent = new Intent(SummaryResultActivity.this, QuizActivity.class);
+                    quizIntent.putExtra("noteId", noteId);
+                    quizIntent.putExtra("quizzesJson", quizzesToJson(quizzes));
+                    startActivity(quizIntent);
                 }
 
                 @Override
                 public void onFailure(String errorMessage) {
-                    setQuizLoading(false, createQuizButton, quizLoadingBox);
+                    quizLoadingBox.setVisibility(View.GONE);
+                    createQuizButton.setEnabled(true);
+                    createQuizButton.setText("퀴즈 생성하기");
                     showShortToast(errorMessage);
                 }
             });
         });
-    }
-
-    private void saveQuizzes(
-            String noteId,
-            List<AiService.QuizItem> generatedQuizzes,
-            Button createQuizButton,
-            TextView quizLoadingBox
-    ) {
-        String userId = authService.getCurrentUserId();
-        if (noteId == null || noteId.isEmpty() || userId == null) {
-            setQuizLoading(false, createQuizButton, quizLoadingBox);
-            showShortToast("학습 기록 또는 로그인 정보를 확인할 수 없습니다.");
-            return;
-        }
-
-        quizLoadingBox.setText("⏳ 퀴즈 저장 중...\n잠시만 기다려주세요");
-        createQuizButton.setText("퀴즈 저장 중...");
-
-        List<QuizModel> quizzes = new ArrayList<>();
-        for (AiService.QuizItem item : generatedQuizzes) {
-            quizzes.add(new QuizModel(
-                    null,
-                    noteId,
-                    userId,
-                    item.question,
-                    item.options,
-                    item.answerIndex,
-                    item.explanation,
-                    null
-            ));
-        }
-
-        firestoreService.saveQuizzes(quizzes, new FirestoreService.SaveListCallback() {
-            @Override
-            public void onSuccess(List<String> documentIds) {
-                setQuizLoading(false, createQuizButton, quizLoadingBox);
-
-                Intent quizIntent = new Intent(
-                        SummaryResultActivity.this,
-                        QuizActivity.class
-                );
-                quizIntent.putExtra("noteId", noteId);
-                quizIntent.putExtra("quizzesJson", quizzesToJson(quizzes));
-                startActivity(quizIntent);
-            }
-
-            @Override
-            public void onFailure(String errorMessage) {
-                setQuizLoading(false, createQuizButton, quizLoadingBox);
-                showShortToast("퀴즈 저장에 실패했습니다. " + errorMessage);
-            }
-        });
-    }
-
-    private void setQuizLoading(
-            boolean loading,
-            Button createQuizButton,
-            TextView quizLoadingBox
-    ) {
-        quizLoadingBox.setVisibility(loading ? View.VISIBLE : View.GONE);
-        if (!loading) {
-            quizLoadingBox.setText("⏳ AI 퀴즈 생성 중...\n잠시만 기다려주세요");
-        }
-        createQuizButton.setEnabled(!loading);
-        createQuizButton.setText(loading ? "퀴즈 생성 중..." : "퀴즈 생성하기");
     }
 
     private void bindSummaryData(String title, String subject,
@@ -166,20 +105,18 @@ public class SummaryResultActivity extends BaseActivity {
         }
     }
 
-    private String quizzesToJson(List<QuizModel> quizzes) {
+    // QuizItem 리스트를 JSON 문자열로 직렬화해서 QuizActivity에 전달
+    private String quizzesToJson(List<AiService.QuizItem> quizzes) {
         try {
             org.json.JSONArray arr = new org.json.JSONArray();
-            for (QuizModel item : quizzes) {
+            for (AiService.QuizItem item : quizzes) {
                 org.json.JSONObject obj = new org.json.JSONObject();
-                obj.put("id", item.getId());
-                obj.put("noteId", item.getNoteId());
-                obj.put("userId", item.getUserId());
-                obj.put("question", item.getQuestion());
+                obj.put("question", item.question);
                 org.json.JSONArray options = new org.json.JSONArray();
-                for (String opt : item.getOptions()) options.put(opt);
+                for (String opt : item.options) options.put(opt);
                 obj.put("options", options);
-                obj.put("answerIndex", item.getAnswerIndex());
-                obj.put("explanation", item.getExplanation());
+                obj.put("answerIndex", item.answerIndex);
+                obj.put("explanation", item.explanation);
                 arr.put(obj);
             }
             return arr.toString();
