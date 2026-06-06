@@ -22,6 +22,7 @@ public class SummaryResultActivity extends BaseActivity {
         setContentView(R.layout.activity_summary_result);
 
         Intent intent = getIntent();
+        String noteId = intent.getStringExtra("noteId");
         String title = intent.getStringExtra("title");
         String subject = intent.getStringExtra("subject");
         ArrayList<String> summary = intent.getStringArrayListExtra("summary");
@@ -52,6 +53,7 @@ public class SummaryResultActivity extends BaseActivity {
                     createQuizButton.setText("퀴즈 생성하기");
 
                     Intent quizIntent = new Intent(SummaryResultActivity.this, QuizActivity.class);
+                    quizIntent.putExtra("noteId", noteId);
                     quizIntent.putExtra("quizzesJson", quizzesToJson(quizzes));
                     startActivity(quizIntent);
                 }
