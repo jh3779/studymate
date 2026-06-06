@@ -1,0 +1,49 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function owns(userId) {
+      return signedIn() && request.auth.uid == userId;
+    }
+
+    function keepsOwner() {
+      return resource.data.userId == request.resource.data.userId;
+    }
+
+    match /users/{userId} {
+      allow create: if owns(userId)
+        && request.resource.data.email == request.auth.token.email;
+      allow read, delete: if owns(userId);
+      allow update: if owns(userId)
+        && request.resource.data.email == resource.data.email;
+    }
+
+    match /study_notes/{noteId} {
+      allow create: if owns(request.resource.data.userId);
+      allow read, delete: if owns(resource.data.userId);
+      allow update: if owns(resource.data.userId) && keepsOwner();
+    }
+
+    match /quizzes/{quizId} {
+      allow create: if owns(request.resource.data.userId);
+      allow read, delete: if owns(resource.data.userId);
+      allow update: if owns(resource.data.userId) && keepsOwner();
+    }
+
+    match /quiz_results/{resultId} {
+      allow create: if owns(request.resource.data.userId);
+      allow read, delete: if owns(resource.data.userId);
+      allow update: if owns(resource.data.userId) && keepsOwner();
+    }
+
+    match /wrong_answers/{wrongId} {
+      allow create: if owns(request.resource.data.userId);
+      allow read, delete: if owns(resource.data.userId);
+      allow update: if owns(resource.data.userId) && keepsOwner();
+    }
+  }
+}
