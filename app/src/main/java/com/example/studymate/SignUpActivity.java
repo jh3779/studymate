@@ -6,7 +6,9 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import com.example.studymate.model.UserModel;
 import com.example.studymate.service.AuthService;
+import com.example.studymate.service.FirestoreService;
 import com.google.firebase.auth.FirebaseUser;
 
 public class SignUpActivity extends BaseActivity {
@@ -16,6 +18,7 @@ public class SignUpActivity extends BaseActivity {
     private TextView errorText;
     private Button signupButton;
     private final AuthService authService = new AuthService();
+    private final FirestoreService firestoreService = new FirestoreService();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,6 +59,33 @@ public class SignUpActivity extends BaseActivity {
         authService.signUp(email, password, new AuthService.AuthCallback() {
             @Override
             public void onSuccess(FirebaseUser user) {
+                if (user == null) {
+                    setLoading(false);
+                    showError("⚠ 사용자 정보를 확인할 수 없습니다.");
+                    return;
+                }
+
+                UserModel userModel = new UserModel(
+                        user.getUid(),
+                        user.getEmail() == null ? email : user.getEmail(),
+                        "",
+                        null
+                );
+                saveUserProfile(userModel);
+            }
+
+            @Override
+            public void onFailure(String errorMessage) {
+                setLoading(false);
+                showError("⚠ " + errorMessage);
+            }
+        });
+    }
+
+    private void saveUserProfile(UserModel user) {
+        firestoreService.saveUser(user, new FirestoreService.SaveCallback() {
+            @Override
+            public void onSuccess(String documentId) {
                 setLoading(false);
                 authService.signOut();
                 showShortToast("회원가입이 완료되었습니다. 로그인해주세요.");
@@ -64,8 +94,24 @@ public class SignUpActivity extends BaseActivity {
 
             @Override
             public void onFailure(String errorMessage) {
+                rollbackCreatedAccount(errorMessage);
+            }
+        });
+    }
+
+    private void rollbackCreatedAccount(String originalErrorMessage) {
+        authService.deleteCurrentUser(new AuthService.ActionCallback() {
+            @Override
+            public void onSuccess() {
                 setLoading(false);
-                showError("⚠ " + errorMessage);
+                showError("⚠ " + originalErrorMessage);
+            }
+
+            @Override
+            public void onFailure(String cleanupErrorMessage) {
+                authService.signOut();
+                setLoading(false);
+                showError("⚠ 회원 정보 저장에 실패했습니다. 관리자에게 문의해주세요.");
             }
         });
     }

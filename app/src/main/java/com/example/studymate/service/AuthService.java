@@ -20,6 +20,12 @@ public class AuthService {
         void onFailure(String errorMessage);
     }
 
+    public interface ActionCallback {
+        void onSuccess();
+
+        void onFailure(String errorMessage);
+    }
+
     public void signUp(String email, String password, AuthCallback callback) {
         firebaseAuth.createUserWithEmailAndPassword(email, password)
                 .addOnSuccessListener(result -> callback.onSuccess(result.getUser()))
@@ -34,6 +40,18 @@ public class AuthService {
 
     public void signOut() {
         firebaseAuth.signOut();
+    }
+
+    public void deleteCurrentUser(ActionCallback callback) {
+        FirebaseUser user = firebaseAuth.getCurrentUser();
+        if (user == null) {
+            callback.onSuccess();
+            return;
+        }
+
+        user.delete()
+                .addOnSuccessListener(unused -> callback.onSuccess())
+                .addOnFailureListener(error -> callback.onFailure(toUserMessage(error)));
     }
 
     public boolean isSignedIn() {
