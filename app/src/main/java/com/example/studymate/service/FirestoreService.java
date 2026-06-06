@@ -125,14 +125,19 @@ public class FirestoreService {
                 .addOnFailureListener(error -> callback.onFailure(toUserMessage(error)));
     }
 
-    public void getQuizzesByNoteId(String noteId, ListCallback<QuizModel> callback) {
-        if (isBlank(noteId)) {
+    public void getQuizzesByNoteId(
+            String noteId,
+            String userId,
+            ListCallback<QuizModel> callback
+    ) {
+        if (isBlank(noteId) || isBlank(userId)) {
             callback.onFailure("학습 기록 정보를 확인할 수 없습니다.");
             return;
         }
 
         firestore.collection(QUIZZES)
                 .whereEqualTo("noteId", noteId)
+                .whereEqualTo("userId", userId)
                 .orderBy("createdAt", Query.Direction.ASCENDING)
                 .get()
                 .addOnSuccessListener(snapshot -> {
