@@ -4,6 +4,7 @@ import com.example.studymate.model.QuizModel;
 import com.example.studymate.model.QuizResultModel;
 import com.example.studymate.model.StudyNoteModel;
 import com.example.studymate.model.UserModel;
+import com.example.studymate.model.UserStatsModel;
 import com.example.studymate.model.WrongAnswerModel;
 import com.google.firebase.FirebaseNetworkException;
 import com.google.firebase.firestore.DocumentReference;
@@ -12,6 +13,7 @@ import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.WriteBatch;
+import com.google.android.gms.tasks.Tasks;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -45,6 +47,12 @@ public class FirestoreService {
 
     public interface ListCallback<T> {
         void onSuccess(List<T> items);
+
+        void onFailure(String errorMessage);
+    }
+
+    public interface StatsCallback {
+        void onSuccess(UserStatsModel stats);
 
         void onFailure(String errorMessage);
     }
@@ -240,6 +248,51 @@ public class FirestoreService {
                     callback.onSuccess(wrongAnswers);
                 })
                 .addOnFailureListener(error -> callback.onFailure(toUserMessage(error)));
+    }
+
+    public void getUserStats(String userId, StatsCallback callback) {
+        if (isBlank(userId)) {
+            callback.onFailure("로그인 사용자 정보를 확인할 수 없습니다.");
+            return;
+        }
+
+        com.google.android.gms.tasks.Task<com.google.firebase.firestore.QuerySnapshot>
+                studyNotesTask = firestore.collection(STUDY_NOTES)
+                .whereEqualTo("userId", userId)
+                .get();
+        com.google.android.gms.tasks.Task<com.google.firebase.firestore.QuerySnapshot>
+                quizResultsTask = firestore.collection(QUIZ_RESULTS)
+                .whereEqualTo("userId", userId)
+                .get();
+
+        Tasks.whenAllSuccess(studyNotesTask, quizResultsTask)
+                .addOnSuccessListener(results -> {
+                    com.google.firebase.firestore.QuerySnapshot studyNotes =
+                            (com.google.firebase.firestore.QuerySnapshot) results.get(0);
+                    com.google.firebase.firestore.QuerySnapshot quizResults =
+                            (com.google.firebase.firestore.QuerySnapshot) results.get(1);
+
+                    int totalScore = 0;
+                    for (DocumentSnapshot document : quizResults.getDocuments()) {
+                        Long score = document.getLong("score");
+                        if (score != null) {
+                            totalScore += score.intValue();
+                        }
+                    }
+
+                    int quizResultCount = quizResults.size();
+                    int averageScore = quizResultCount == 0
+                            ? 0
+                            : Math.round((float) totalScore / quizResultCount);
+                    callback.onSuccess(new UserStatsModel(
+                            studyNotes.size(),
+                            quizResultCount,
+                            averageScore
+                    ));
+                })
+                .addOnFailureListener(error -> callback.onFailure(
+                        toUserMessage((Exception) error)
+                ));
     }
 
     private Map<String, Object> withCreatedAt(Map<String, Object> source) {
