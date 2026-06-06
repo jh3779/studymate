@@ -1,7 +1,6 @@
 package com.example.studymate;
 
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Toast;
@@ -9,9 +8,6 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
 public abstract class BaseActivity extends AppCompatActivity {
-    private static final String PREFS_NAME = "study_mate_prefs";
-    private static final String KEY_LOGGED_IN = "logged_in";
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -34,18 +30,6 @@ public abstract class BaseActivity extends AppCompatActivity {
         if (view != null) {
             view.setOnClickListener(listener);
         }
-    }
-
-    protected boolean isLoggedIn() {
-        SharedPreferences preferences = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
-        return preferences.getBoolean(KEY_LOGGED_IN, false);
-    }
-
-    protected void setLoggedIn(boolean loggedIn) {
-        getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
-                .edit()
-                .putBoolean(KEY_LOGGED_IN, loggedIn)
-                .apply();
     }
 
     protected void showShortToast(String message) {

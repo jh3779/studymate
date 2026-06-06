@@ -2,13 +2,19 @@ package com.example.studymate;
 
 import android.os.Bundle;
 import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+
+import com.example.studymate.service.AuthService;
+import com.google.firebase.auth.FirebaseUser;
 
 public class LoginActivity extends BaseActivity {
     private EditText emailInput;
     private EditText passwordInput;
     private TextView errorText;
+    private Button loginButton;
+    private final AuthService authService = new AuthService();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -18,8 +24,9 @@ public class LoginActivity extends BaseActivity {
         emailInput = findViewById(R.id.emailInput);
         passwordInput = findViewById(R.id.passwordInput);
         errorText = findViewById(R.id.loginErrorText);
+        loginButton = findViewById(R.id.loginButton);
 
-        bindClick(R.id.loginButton, v -> handleLogin());
+        loginButton.setOnClickListener(v -> handleLogin());
         bindClick(R.id.signupLink, v -> goTo(SignUpActivity.class));
     }
 
@@ -33,8 +40,33 @@ public class LoginActivity extends BaseActivity {
             return;
         }
 
-        // TODO: 최백도 담당 AuthService 로그인 연동 시 이 더미 처리를 교체한다.
-        setLoggedIn(true);
-        goToAndClear(HomeActivity.class);
+        errorText.setVisibility(View.GONE);
+        setLoading(true);
+
+        authService.signIn(email, password, new AuthService.AuthCallback() {
+            @Override
+            public void onSuccess(FirebaseUser user) {
+                setLoading(false);
+                goToAndClear(HomeActivity.class);
+            }
+
+            @Override
+            public void onFailure(String errorMessage) {
+                setLoading(false);
+                showError(errorMessage);
+            }
+        });
+    }
+
+    private void setLoading(boolean loading) {
+        loginButton.setEnabled(!loading);
+        loginButton.setText(loading ? "로그인 중..." : "로그인");
+        emailInput.setEnabled(!loading);
+        passwordInput.setEnabled(!loading);
+    }
+
+    private void showError(String message) {
+        errorText.setText("⚠ " + message);
+        errorText.setVisibility(View.VISIBLE);
     }
 }

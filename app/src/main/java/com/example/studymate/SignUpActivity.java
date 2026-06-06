@@ -2,14 +2,20 @@ package com.example.studymate;
 
 import android.os.Bundle;
 import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+
+import com.example.studymate.service.AuthService;
+import com.google.firebase.auth.FirebaseUser;
 
 public class SignUpActivity extends BaseActivity {
     private EditText emailInput;
     private EditText passwordInput;
     private EditText confirmInput;
     private TextView errorText;
+    private Button signupButton;
+    private final AuthService authService = new AuthService();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -20,9 +26,10 @@ public class SignUpActivity extends BaseActivity {
         passwordInput = findViewById(R.id.signupPasswordInput);
         confirmInput = findViewById(R.id.signupConfirmInput);
         errorText = findViewById(R.id.signupErrorText);
+        signupButton = findViewById(R.id.signupButton);
 
         bindClick(R.id.backToLogin, v -> finish());
-        bindClick(R.id.signupButton, v -> handleSignUp());
+        signupButton.setOnClickListener(v -> handleSignUp());
     }
 
     private void handleSignUp() {
@@ -43,9 +50,32 @@ public class SignUpActivity extends BaseActivity {
             return;
         }
 
-        // TODO: 최백도 담당 AuthService 회원가입 연동 시 이 더미 처리를 교체한다.
-        showShortToast("회원가입이 완료되었습니다. 로그인해주세요.");
-        finish();
+        errorText.setVisibility(View.GONE);
+        setLoading(true);
+
+        authService.signUp(email, password, new AuthService.AuthCallback() {
+            @Override
+            public void onSuccess(FirebaseUser user) {
+                setLoading(false);
+                authService.signOut();
+                showShortToast("회원가입이 완료되었습니다. 로그인해주세요.");
+                finish();
+            }
+
+            @Override
+            public void onFailure(String errorMessage) {
+                setLoading(false);
+                showError("⚠ " + errorMessage);
+            }
+        });
+    }
+
+    private void setLoading(boolean loading) {
+        signupButton.setEnabled(!loading);
+        signupButton.setText(loading ? "가입 처리 중..." : "회원가입");
+        emailInput.setEnabled(!loading);
+        passwordInput.setEnabled(!loading);
+        confirmInput.setEnabled(!loading);
     }
 
     private void showError(String message) {
