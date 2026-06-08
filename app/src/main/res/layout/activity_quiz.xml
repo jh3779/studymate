@@ -33,6 +33,19 @@
             android:textStyle="bold" />
     </LinearLayout>
 
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
     <TextView
         android:id="@+id/questionText"
         android:layout_width="match_parent"
@@ -91,6 +104,13 @@
         android:layout_height="0dp"
         android:layout_weight="1" />
 
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="24dp" />
+
+        </LinearLayout>
+ </ScrollView>
+
     <Button
         android:id="@+id/nextQuizButton"
         android:layout_width="match_parent"
@@ -112,3 +132,5 @@
         android:textColor="@color/study_text_muted"
         android:textSize="14sp" />
 </LinearLayout>
+
+
