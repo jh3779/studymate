@@ -5,6 +5,13 @@ const OpenAI = require("openai");
 
 const openaiApiKey = defineSecret("OPENAI_API_KEY");
 
+// 지연 초기화: Secret이 바인딩된 후 첫 요청 시 단일 인스턴스 생성
+let _openai;
+function getOpenAI() {
+  if (!_openai) _openai = new OpenAI({ apiKey: openaiApiKey.value() });
+  return _openai;
+}
+
 const app = express();
 app.use(express.json());
 
@@ -33,6 +40,10 @@ ${text}
 }`;
 }
 
+// OpenAI의 response_format: json_object 모드는 최상위 JSON 객체만 허용한다.
+// 따라서 ai_prompt_spec.md의 bare array 형식 대신 { "quizzes": [...] }로 래핑한다.
+// 서버에서 raw.quizzes를 추출한 뒤 배열 그대로 클라이언트에 반환하므로
+// AiService.java의 new JSONArray(raw) 파싱은 정상 동작한다.
 function buildQuizPrompt(text) {
   return `너는 시험 대비용 객관식 문제를 만들어주는 AI 학습 도우미다.
 
@@ -73,9 +84,7 @@ app.post("/summary", async (req, res) => {
   }
 
   try {
-    const openai = new OpenAI({ apiKey: openaiApiKey.value() });
-
-    const completion = await openai.chat.completions.create({
+    const completion = await getOpenAI().chat.completions.create({
       model: "gpt-4o-mini",
       messages: [{ role: "user", content: buildSummaryPrompt(text) }],
       response_format: { type: "json_object" },
@@ -92,8 +101,9 @@ app.post("/summary", async (req, res) => {
 
     return res.status(200).json(result);
   } catch (err) {
-    console.error("summary 오류:", err);
-    return res.status(500).json({ error: "요약 생성에 실패했습니다." });
+    const httpStatus = err?.status >= 400 && err?.status < 600 ? err.status : 500;
+    console.error(`summary 오류 [${httpStatus}]:`, err.message ?? err);
+    return res.status(httpStatus).json({ error: "요약 생성에 실패했습니다." });
   }
 });
 
@@ -107,9 +117,7 @@ app.post("/quiz", async (req, res) => {
   }
 
   try {
-    const openai = new OpenAI({ apiKey: openaiApiKey.value() });
-
-    const completion = await openai.chat.completions.create({
+    const completion = await getOpenAI().chat.completions.create({
       model: "gpt-4o-mini",
       messages: [{ role: "user", content: buildQuizPrompt(text) }],
       response_format: { type: "json_object" },
@@ -137,8 +145,9 @@ app.post("/quiz", async (req, res) => {
     // AiService.java는 JSON 배열을 기대함
     return res.status(200).json(valid);
   } catch (err) {
-    console.error("quiz 오류:", err);
-    return res.status(500).json({ error: "퀴즈 생성에 실패했습니다." });
+    const httpStatus = err?.status >= 400 && err?.status < 600 ? err.status : 500;
+    console.error(`quiz 오류 [${httpStatus}]:`, err.message ?? err);
+    return res.status(httpStatus).json({ error: "퀴즈 생성에 실패했습니다." });
   }
 });
 
