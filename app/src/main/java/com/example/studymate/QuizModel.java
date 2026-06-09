@@ -1,4 +1,4 @@
-package com.example.studymate.model;
+package com.example.studymate;
 
 import java.io.Serializable;
 import java.util.List;

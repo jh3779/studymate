@@ -109,7 +109,7 @@
         android:layout_height="24dp" />
 
         </LinearLayout>
- </ScrollView>
+    </ScrollView>
 
     <Button
         android:id="@+id/nextQuizButton"
@@ -132,5 +132,3 @@
         android:textColor="@color/study_text_muted"
         android:textSize="14sp" />
 </LinearLayout>
-
-
