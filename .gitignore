@@ -15,6 +15,11 @@
 .cxx
 local.properties
 
+# Local secrets
+.env
+.env.local
+.env.*.local
+
 # Claude Code
 CLAUDE.md
 .claude/

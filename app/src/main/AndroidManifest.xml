@@ -20,6 +20,7 @@
         <activity android:name=".SummaryResultActivity" />
         <activity android:name=".StudyInputActivity" />
         <activity android:name=".HomeActivity" />
+        <activity android:name=".EmailVerificationActivity" />
         <activity android:name=".SignUpActivity" />
         <activity android:name=".LoginActivity" />
         <activity

@@ -16,7 +16,11 @@ public class SplashActivity extends BaseActivity {
 
         new Handler(Looper.getMainLooper()).postDelayed(() -> {
             if (authService.isSignedIn()) {
-                goToAndClear(HomeActivity.class);
+                if (authService.isCurrentUserEmailVerified()) {
+                    goToAndClear(HomeActivity.class);
+                } else {
+                    goToAndClear(EmailVerificationActivity.class);
+                }
             } else {
                 goToAndClear(LoginActivity.class);
             }

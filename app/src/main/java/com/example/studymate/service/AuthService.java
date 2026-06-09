@@ -38,6 +38,36 @@ public class AuthService {
                 .addOnFailureListener(error -> callback.onFailure(toUserMessage(error)));
     }
 
+    public void sendEmailVerification(ActionCallback callback) {
+        FirebaseUser user = firebaseAuth.getCurrentUser();
+        if (user == null) {
+            callback.onFailure("사용자 정보를 확인할 수 없습니다.");
+            return;
+        }
+
+        user.sendEmailVerification()
+                .addOnSuccessListener(unused -> callback.onSuccess())
+                .addOnFailureListener(error -> callback.onFailure(toUserMessage(error)));
+    }
+
+    public void applyEmailVerificationCode(String code, ActionCallback callback) {
+        firebaseAuth.applyActionCode(code)
+                .addOnSuccessListener(unused -> callback.onSuccess())
+                .addOnFailureListener(error -> callback.onFailure(toUserMessage(error)));
+    }
+
+    public void reloadCurrentUser(AuthCallback callback) {
+        FirebaseUser user = firebaseAuth.getCurrentUser();
+        if (user == null) {
+            callback.onFailure("사용자 정보를 확인할 수 없습니다.");
+            return;
+        }
+
+        user.reload()
+                .addOnSuccessListener(unused -> callback.onSuccess(firebaseAuth.getCurrentUser()))
+                .addOnFailureListener(error -> callback.onFailure(toUserMessage(error)));
+    }
+
     public void signOut() {
         firebaseAuth.signOut();
     }
@@ -56,6 +86,11 @@ public class AuthService {
 
     public boolean isSignedIn() {
         return firebaseAuth.getCurrentUser() != null;
+    }
+
+    public boolean isCurrentUserEmailVerified() {
+        FirebaseUser user = firebaseAuth.getCurrentUser();
+        return user != null && user.isEmailVerified();
     }
 
     public String getCurrentUserId() {
