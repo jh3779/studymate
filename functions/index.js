@@ -2,8 +2,13 @@ const { onRequest } = require("firebase-functions/v2/https");
 const { defineSecret } = require("firebase-functions/params");
 const express = require("express");
 const OpenAI = require("openai");
+const admin = require("firebase-admin");
+
+if (!admin.apps.length) admin.initializeApp();
 
 const openaiApiKey = defineSecret("OPENAI_API_KEY");
+
+const MAX_TEXT_LENGTH = 5000;
 
 // 지연 초기화: Secret이 바인딩된 후 첫 요청 시 단일 인스턴스 생성
 let _openai;
@@ -14,6 +19,22 @@ function getOpenAI() {
 
 const app = express();
 app.use(express.json());
+
+async function verifyAuth(req, res, next) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return res.status(401).json({ error: "인증이 필요합니다." });
+  }
+  try {
+    await admin.auth().verifyIdToken(authHeader.slice(7).trim());
+    next();
+  } catch (err) {
+    console.error("verifyAuth 실패:", err.message ?? err);
+    return res.status(401).json({ error: "인증에 실패했습니다. 다시 로그인해주세요." });
+  }
+}
+
+app.use(verifyAuth);
 
 // ─── 프롬프트 ────────────────────────────────────────────────────────────────
 
@@ -82,6 +103,9 @@ app.post("/summary", async (req, res) => {
   if (!text || typeof text !== "string" || text.trim().length === 0) {
     return res.status(400).json({ error: "text 필드가 필요합니다." });
   }
+  if (text.length > MAX_TEXT_LENGTH) {
+    return res.status(400).json({ error: `입력 내용은 ${MAX_TEXT_LENGTH}자를 초과할 수 없습니다.` });
+  }
 
   try {
     const completion = await getOpenAI().chat.completions.create({
@@ -114,6 +138,9 @@ app.post("/quiz", async (req, res) => {
 
   if (!text || typeof text !== "string" || text.trim().length === 0) {
     return res.status(400).json({ error: "text 필드가 필요합니다." });
+  }
+  if (text.length > MAX_TEXT_LENGTH) {
+    return res.status(400).json({ error: `입력 내용은 ${MAX_TEXT_LENGTH}자를 초과할 수 없습니다.` });
   }
 
   try {

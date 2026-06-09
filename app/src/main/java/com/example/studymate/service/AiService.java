@@ -4,6 +4,10 @@ import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 
+import com.google.android.gms.tasks.Tasks;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -78,17 +82,32 @@ public class AiService {
 
     public void generateSummary(String text, SummaryCallback callback) {
         executor.execute(() -> {
+            if (BASE_URL.isEmpty()) {
+                failOnMain(callback, "AI 서버 주소가 설정되지 않았습니다. local.properties의 ai.base.url을 확인해주세요.");
+                return;
+            }
             try {
+                String token = fetchIdToken();
+                if (token == null) {
+                    failOnMain(callback, "로그인이 필요합니다. 다시 로그인해주세요.");
+                    return;
+                }
+
                 JSONObject body = new JSONObject();
                 body.put("text", text);
 
                 Request request = new Request.Builder()
                         .url(BASE_URL + "/summary")
+                        .addHeader("Authorization", "Bearer " + token)
                         .post(RequestBody.create(body.toString(), JSON_TYPE))
                         .build();
 
                 try (Response response = client.newCall(request).execute()) {
-                    if (!response.isSuccessful() || response.body() == null) {
+                    if (!response.isSuccessful()) {
+                        failOnMain(callback, extractErrorMessage(response, "서버 오류가 발생했습니다. 다시 시도해주세요."));
+                        return;
+                    }
+                    if (response.body() == null) {
                         failOnMain(callback, "서버 오류가 발생했습니다. 다시 시도해주세요.");
                         return;
                     }
@@ -107,17 +126,32 @@ public class AiService {
 
     public void generateQuizzes(String text, QuizCallback callback) {
         executor.execute(() -> {
+            if (BASE_URL.isEmpty()) {
+                failOnMain(callback, "AI 서버 주소가 설정되지 않았습니다. local.properties의 ai.base.url을 확인해주세요.");
+                return;
+            }
             try {
+                String token = fetchIdToken();
+                if (token == null) {
+                    failOnMain(callback, "로그인이 필요합니다. 다시 로그인해주세요.");
+                    return;
+                }
+
                 JSONObject body = new JSONObject();
                 body.put("text", text);
 
                 Request request = new Request.Builder()
                         .url(BASE_URL + "/quiz")
+                        .addHeader("Authorization", "Bearer " + token)
                         .post(RequestBody.create(body.toString(), JSON_TYPE))
                         .build();
 
                 try (Response response = client.newCall(request).execute()) {
-                    if (!response.isSuccessful() || response.body() == null) {
+                    if (!response.isSuccessful()) {
+                        failOnMain(callback, extractErrorMessage(response, "서버 오류가 발생했습니다. 다시 시도해주세요."));
+                        return;
+                    }
+                    if (response.body() == null) {
                         failOnMain(callback, "서버 오류가 발생했습니다. 다시 시도해주세요.");
                         return;
                     }
@@ -190,6 +224,31 @@ public class AiService {
     }
 
     // ─── 헬퍼 ────────────────────────────────────────────────────
+
+    // 백그라운드 스레드에서 호출. 로그인 안 됐거나 토큰 취득 실패·타임아웃 시 null 반환.
+    private String fetchIdToken() {
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user == null) return null;
+        try {
+            String token = Tasks.await(user.getIdToken(false), 10, TimeUnit.SECONDS).getToken();
+            return (token != null && !token.isEmpty()) ? token : null;
+        } catch (Exception e) {
+            Log.e(TAG, "ID 토큰 취득 실패", e);
+            return null;
+        }
+    }
+
+    private String extractErrorMessage(Response response, String fallback) {
+        try {
+            if (response.body() == null) return fallback;
+            JSONObject json = new JSONObject(response.body().string());
+            String msg = json.optString("error", "");
+            return msg.isEmpty() ? fallback : msg;
+        } catch (Exception e) {
+            Log.w(TAG, "서버 오류 body 파싱 실패", e);
+            return fallback;
+        }
+    }
 
     private void failOnMain(SummaryCallback callback, String message) {
         mainHandler.post(() -> callback.onFailure(message));
