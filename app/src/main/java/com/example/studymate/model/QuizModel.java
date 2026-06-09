@@ -15,6 +15,7 @@ public class QuizModel {
     private int answerIndex;
     private String explanation;
     private Date createdAt;
+    private int userSelectedIndex = -1;
 
     public QuizModel() {
         options = new ArrayList<>();
@@ -156,5 +157,17 @@ public class QuizModel {
 
     public void setCreatedAt(Date createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public int getUserSelectedIndex() {
+        return userSelectedIndex;
+    }
+
+    public void setUserSelectedIndex(int userSelectedIndex) {
+        this.userSelectedIndex = userSelectedIndex;
+    }
+
+    public boolean isCorrect() {
+        return userSelectedIndex == answerIndex;
     }
 }
