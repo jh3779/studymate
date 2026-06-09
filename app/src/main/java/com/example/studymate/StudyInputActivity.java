@@ -56,6 +56,10 @@ public class StudyInputActivity extends BaseActivity {
             showError("⚠ 학습 내용은 30자 이상 입력해주세요. 현재 " + content.length() + "자입니다.");
             return;
         }
+        if (content.length() > 5000) {
+            showError("⚠ 학습 내용은 5000자 이하로 입력해주세요. 현재 " + content.length() + "자입니다.");
+            return;
+        }
 
         errorText.setVisibility(View.GONE);
         loadingBox.setVisibility(View.VISIBLE);
