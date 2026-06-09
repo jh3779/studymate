@@ -12,11 +12,7 @@ val localProperties = Properties().apply {
 
 android {
     namespace = "com.example.studymate"
-    compileSdk {
-        version = release(36) {
-            minorApiLevel = 1
-        }
-    }
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.example.studymate"
@@ -51,6 +47,7 @@ android {
 }
 
 dependencies {
+    implementation("androidx.core:core-ktx:1.12.0")
     implementation(libs.appcompat)
     implementation(libs.material)
     implementation(libs.activity)
