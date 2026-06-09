@@ -47,6 +47,18 @@ public class LoginActivity extends BaseActivity {
             @Override
             public void onSuccess(FirebaseUser user) {
                 setLoading(false);
+                if (user == null) {
+                    showError("사용자 정보를 확인할 수 없습니다.");
+                    return;
+                }
+                if (!user.isEmailVerified()) {
+                    showShortToast("이메일 인증을 완료해주세요.");
+                    startActivity(EmailVerificationActivity.createIntent(
+                            LoginActivity.this,
+                            user.getEmail()
+                    ));
+                    return;
+                }
                 goToAndClear(HomeActivity.class);
             }
 

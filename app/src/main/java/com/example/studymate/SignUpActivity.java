@@ -86,10 +86,7 @@ public class SignUpActivity extends BaseActivity {
         firestoreService.saveUser(user, new FirestoreService.SaveCallback() {
             @Override
             public void onSuccess(String documentId) {
-                setLoading(false);
-                authService.signOut();
-                showShortToast("회원가입이 완료되었습니다. 로그인해주세요.");
-                finish();
+                sendInitialVerificationEmail(user.getEmail());
             }
 
             @Override
@@ -97,6 +94,29 @@ public class SignUpActivity extends BaseActivity {
                 rollbackCreatedAccount(errorMessage);
             }
         });
+    }
+
+    private void sendInitialVerificationEmail(String email) {
+        authService.sendEmailVerification(new AuthService.ActionCallback() {
+            @Override
+            public void onSuccess() {
+                setLoading(false);
+                showShortToast("인증 메일을 보냈습니다.");
+                openEmailVerification(email);
+            }
+
+            @Override
+            public void onFailure(String errorMessage) {
+                setLoading(false);
+                showShortToast("인증 메일 발송에 실패했습니다. 다시 시도해주세요.");
+                openEmailVerification(email);
+            }
+        });
+    }
+
+    private void openEmailVerification(String email) {
+        startActivity(EmailVerificationActivity.createIntent(this, email));
+        finish();
     }
 
     private void rollbackCreatedAccount(String originalErrorMessage) {

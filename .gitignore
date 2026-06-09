@@ -8,12 +8,20 @@
 /.idea/navEditor.xml
 /.idea/assetWizardSettings.xml
 .idea/
+.vscode/
 .DS_Store
 /build
 /captures
 .externalNativeBuild
 .cxx
 local.properties
+firebase-debug.log
+firebase-debug.*.log
+
+# Local secrets
+.env
+.env.local
+.env.*.local
 
 # Claude Code
 CLAUDE.md
