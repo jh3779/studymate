@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.TextView;
+import java.util.ArrayList;
 
 public class QuizActivity extends BaseActivity {
     private final String[] questions = {
@@ -25,6 +26,8 @@ public class QuizActivity extends BaseActivity {
     private int currentIndex = 0;
     private int selectedIndex = -1;
     private int correctCount = 0;
+
+    private ArrayList<Integer> userAnswers = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -74,6 +77,8 @@ public class QuizActivity extends BaseActivity {
     }
 
     private void moveNext() {
+        userAnswers.add(selectedIndex);
+
         if (selectedIndex == answers[currentIndex]) {
             correctCount++;
         }
@@ -82,6 +87,7 @@ public class QuizActivity extends BaseActivity {
             Intent intent = new Intent(this, QuizResultActivity.class);
             intent.putExtra("correctCount", correctCount);
             intent.putExtra("totalCount", questions.length);
+            intent.putExtra("userAnswers", userAnswers);
             startActivity(intent);
             return;
         }
