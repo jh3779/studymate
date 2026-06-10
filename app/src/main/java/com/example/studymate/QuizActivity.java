@@ -87,7 +87,7 @@ public class QuizActivity extends BaseActivity {
             Intent intent = new Intent(this, QuizResultActivity.class);
             intent.putExtra("correctCount", correctCount);
             intent.putExtra("totalCount", questions.length);
-            intent.putExtra("userAnswers", userAnswers);
+            intent.putIntegerArrayListExtra("userAnswers", userAnswers);
             startActivity(intent);
             return;
         }

@@ -86,11 +86,12 @@
             android:textSize="16sp" />
 
         <TextView
+            android:id="@+id/resultSaveStatusText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
             android:gravity="center"
-            android:text="✓ 오답이 오답노트에 자동 저장됐습니다."
+            android:text="오답노트에서 틀린 문제를 확인할 수 있습니다."
             android:textColor="@color/study_text_muted"
             android:textSize="14sp" />
     </LinearLayout>

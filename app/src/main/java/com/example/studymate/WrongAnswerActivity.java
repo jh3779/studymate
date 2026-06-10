@@ -1,6 +1,8 @@
 package com.example.studymate;
 
 import android.os.Bundle;
+import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
 import java.util.ArrayList;
 
@@ -31,6 +33,7 @@ public class WrongAnswerActivity extends BaseActivity {
     private TextView tvMyAnswer;
     private TextView tvRealAnswer;
     private TextView tvExplanation;
+    private Button actionButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,43 +45,78 @@ public class WrongAnswerActivity extends BaseActivity {
         tvMyAnswer      = findViewById(R.id.optionOne);
         tvRealAnswer    = findViewById(R.id.optionTwo);
         tvExplanation   = findViewById(R.id.optionThree);
+        actionButton    = findViewById(R.id.retryQuizButton);
 
-        // 인텐트로 전달받은 실제 유저 답안 데이터를 진짜로 읽어옵니다.
-        userAnswers = (ArrayList<Integer>) getIntent().getSerializableExtra("userAnswers");
+        ArrayList<Integer> receivedAnswers = getIntent().getIntegerArrayListExtra("userAnswers");
+        userAnswers = receivedAnswers == null ? new ArrayList<>() : receivedAnswers;
 
-        // 실제 유저 답안지가 넘어온 경우에만 틀린 문제 필터링 알고리즘 작동
-        if (userAnswers != null && !userAnswers.isEmpty()) {
-            wrongIndices.clear();
-            for (int i = 0; i < answers.length; i++) {
-                if (i < userAnswers.size() && userAnswers.get(i) != answers[i]) {
-                    wrongIndices.add(i); // 틀린 문제 원본 인덱스 기록
-                }
-            }
-        }
-
-        // 만약 데이터가 없거나 전부 맞았다면 예외 방지용 기본 가이드 설정
+        collectWrongAnswers();
         if (wrongIndices.isEmpty()) {
-            wrongIndices.add(0);
+            displayEmptyState();
+        } else {
+            displayWrongAnswer();
         }
-
-        // 화면에 실제 데이터 바인딩해서 텍스트 그려주기
-        displayWrongAnswer();
 
         bindClick(R.id.backResult, v -> finish());
         bindClick(R.id.wrongHomeTab, v -> goToAndClear(HomeActivity.class));
         bindClick(R.id.wrongMyPageTab, v -> goTo(MyPageActivity.class));
 
-        if (findViewById(R.id.retryQuizButton) != null) {
-            findViewById(R.id.retryQuizButton).setOnClickListener(v -> {
+        if (actionButton != null) {
+            actionButton.setOnClickListener(v -> {
+                if (wrongIndices.isEmpty()) {
+                    goTo(QuizActivity.class);
+                    finish();
+                    return;
+                }
+
                 if (currentWrongIndex < wrongIndices.size() - 1) {
                     currentWrongIndex++;
                     displayWrongAnswer();
-                } else {
-                    showShortToast("모든 오답 확인 완료! 퀴즈 화면으로 돌아갑니다.");
-                    goTo(QuizActivity.class);
-                    finish();
+                    return;
                 }
+
+                showShortToast("모든 오답 확인 완료! 퀴즈 화면으로 돌아갑니다.");
+                goTo(QuizActivity.class);
+                finish();
             });
+        }
+    }
+
+    private void collectWrongAnswers() {
+        wrongIndices.clear();
+        if (userAnswers.isEmpty()) {
+            return;
+        }
+
+        for (int i = 0; i < answers.length && i < userAnswers.size(); i++) {
+            if (userAnswers.get(i) != answers[i]) {
+                wrongIndices.add(i);
+            }
+        }
+    }
+
+    private void displayEmptyState() {
+        if (tvWrongProgress != null) {
+            tvWrongProgress.setText("오답 없음");
+        }
+        if (tvWrongQuestion != null) {
+            tvWrongQuestion.setText(userAnswers.isEmpty()
+                    ? "저장된 오답 데이터가 없습니다."
+                    : "모든 문제를 맞혔습니다.");
+        }
+        if (tvMyAnswer != null) {
+            tvMyAnswer.setText(userAnswers.isEmpty()
+                    ? "퀴즈를 풀면 틀린 문제만 이곳에 표시됩니다."
+                    : "확인할 오답이 없습니다.");
+        }
+        if (tvRealAnswer != null) {
+            tvRealAnswer.setVisibility(View.GONE);
+        }
+        if (tvExplanation != null) {
+            tvExplanation.setVisibility(View.GONE);
+        }
+        if (actionButton != null) {
+            actionButton.setText("퀴즈 풀러 가기");
         }
     }
 
@@ -87,6 +125,13 @@ public class WrongAnswerActivity extends BaseActivity {
 
         int originalIdx = wrongIndices.get(currentWrongIndex);
 
+        if (tvRealAnswer != null) {
+            tvRealAnswer.setVisibility(View.VISIBLE);
+        }
+        if (tvExplanation != null) {
+            tvExplanation.setVisibility(View.VISIBLE);
+        }
+
         if (tvWrongProgress != null) {
             tvWrongProgress.setText("오답 " + (currentWrongIndex + 1) + "/" + wrongIndices.size());
         }
@@ -94,22 +139,28 @@ public class WrongAnswerActivity extends BaseActivity {
             tvWrongQuestion.setText("Q" + (originalIdx + 1) + ". " + questions[originalIdx]);
         }
 
-        // 실제 유저가 고른 보기 데이터 렌더링
         if (userAnswers != null && originalIdx < userAnswers.size()) {
             int userSelection = userAnswers.get(originalIdx);
-            if (tvMyAnswer != null && userSelection >= 0 && userSelection < options[originalIdx].length) {
-                tvMyAnswer.setText("❌ 내가 고른 답: " + options[originalIdx][userSelection]);
+            if (tvMyAnswer != null) {
+                if (userSelection >= 0 && userSelection < options[originalIdx].length) {
+                    tvMyAnswer.setText("✕ 내가 고른 답: " + options[originalIdx][userSelection]);
+                } else {
+                    tvMyAnswer.setText("✕ 내가 고른 답: 선택 정보 오류");
+                }
             }
         } else {
-            if (tvMyAnswer != null) tvMyAnswer.setText("❌ 내가 고른 답: 없음");
+            if (tvMyAnswer != null) tvMyAnswer.setText("✕ 내가 고른 답: 없음");
         }
 
         int correctSelection = answers[originalIdx];
         if (tvRealAnswer != null) {
-            tvRealAnswer.setText("⭕ 실제 정답: " + options[originalIdx][correctSelection]);
+            tvRealAnswer.setText("✓ 실제 정답: " + options[originalIdx][correctSelection]);
         }
         if (tvExplanation != null) {
-            tvExplanation.setText("💡 해설: " + explanations[originalIdx]);
+            tvExplanation.setText("해설: " + explanations[originalIdx]);
+        }
+        if (actionButton != null) {
+            actionButton.setText(currentWrongIndex < wrongIndices.size() - 1 ? "다음 오답 보기" : "퀴즈 다시 풀기");
         }
     }
 }
