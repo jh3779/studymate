@@ -35,22 +35,58 @@
                 android:textStyle="bold" />
 
             <TextView
+                android:id="@+id/quizProgressText"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                android:text="데이터베이스 기본키 정리"
+                android:text="오답 진행 상황"
                 android:textColor="@color/study_text_muted"
                 android:textSize="17sp" />
 
             <TextView
+                android:id="@+id/questionText"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="24dp"
                 android:background="@drawable/bg_card"
                 android:padding="@dimen/card_padding"
-                android:text="Q3. 기본키의 개수 제한은?\n\n✕ 내 답: 여러 개 존재 가능\n✓ 정답: 테이블당 하나만 존재\n\n하나의 테이블에는 기본키가 반드시 하나만 존재합니다. 개체 무결성 원칙에 의한 제약입니다."
+                android:text="Q. 질문 내용이 로딩 중입니다."
                 android:textColor="@color/study_text"
                 android:textSize="17sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/optionOne"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/bg_card"
+                android:padding="@dimen/card_padding"
+                android:text="내 답: 데이터 로딩 중"
+                android:textColor="#D32F2F"
+                android:textSize="16sp" />
+
+            <TextView
+                android:id="@+id/optionTwo"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/bg_card"
+                android:padding="@dimen/card_padding"
+                android:text="정답: 데이터 로딩 중"
+                android:textColor="#388E3C"
+                android:textSize="16sp" />
+
+            <TextView
+                android:id="@+id/optionThree"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/bg_card"
+                android:padding="@dimen/card_padding"
+                android:text="해설: 데이터 로딩 중"
+                android:textColor="@color/study_text_muted"
+                android:textSize="15sp"
                 android:lineSpacingExtra="6dp" />
 
             <Button
@@ -59,7 +95,7 @@
                 android:layout_height="48dp"
                 android:layout_marginTop="24dp"
                 android:background="@drawable/bg_button_secondary"
-                android:text="다시 풀기"
+                android:text="다음 오답 보기"
                 android:textAllCaps="false"
                 android:textColor="@color/study_text"
                 android:textSize="16sp" />
