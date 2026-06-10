@@ -50,12 +50,6 @@ public class AuthService {
                 .addOnFailureListener(error -> callback.onFailure(toUserMessage(error)));
     }
 
-    public void applyEmailVerificationCode(String code, ActionCallback callback) {
-        firebaseAuth.applyActionCode(code)
-                .addOnSuccessListener(unused -> callback.onSuccess())
-                .addOnFailureListener(error -> callback.onFailure(toUserMessage(error)));
-    }
-
     public void reloadCurrentUser(AuthCallback callback) {
         FirebaseUser user = firebaseAuth.getCurrentUser();
         if (user == null) {
