@@ -2,26 +2,16 @@ package com.example.studymate;
 
 import android.os.Bundle;
 import android.widget.TextView;
+import com.example.studymate.model.QuizModel;
 import java.util.ArrayList;
 
+/**
+ *  원본 AI 생성 퀴즈 기반 오답노트 동적 매핑 핸들러
+ */
 public class WrongAnswerActivity extends BaseActivity {
-    private final String[] questions = {
-            "기본키가 가질 수 없는 값은 무엇인가?",
-            "기본키의 주요 역할은 무엇인가?",
-            "기본키의 개수 제한은?"
-    };
-    private final String[][] options = {
-            {"① 숫자 값", "② NULL 값", "③ 문자열 값", "④ 날짜 값"},
-            {"① 테이블 삭제", "② 행 고유 식별", "③ 색인 제거", "④ 중복 허용"},
-            {"① 여러 개 존재 가능", "② 테이블당 하나", "③ 컬럼마다 하나", "④ 없어야 함"}
-    };
-    private final int[] answers = {1, 1, 1};
-    private final String[] explanations = {
-            "기본키는 테이블 내에서 중복될 수 없으며, NULL 값을 가질 수 없습니다.",
-            "기본키는 각 행(레코드)을 고유하게 식별하기 위해 사용됩니다.",
-            "관계형 데이터베이스에서 하나의 테이블에는 오직 하나의 기본키만 설정할 수 있습니다."
-    };
 
+    // 로컬 하드코딩 배열 완전 파괴 ➡️ 동적 인텐트 유동형 리스트로 전환
+    private ArrayList<QuizModel> quizList = new ArrayList<>();
     private ArrayList<Integer> wrongIndices = new ArrayList<>();
     private ArrayList<Integer> userAnswers = new ArrayList<>();
     private int currentWrongIndex = 0;
@@ -43,25 +33,28 @@ public class WrongAnswerActivity extends BaseActivity {
         tvRealAnswer    = findViewById(R.id.optionTwo);
         tvExplanation   = findViewById(R.id.optionThree);
 
-        // 인텐트로 전달받은 실제 유저 답안 데이터를 진짜로 읽어옵니다.
         userAnswers = (ArrayList<Integer>) getIntent().getSerializableExtra("userAnswers");
 
-        // 실제 유저 답안지가 넘어온 경우에만 틀린 문제 필터링 알고리즘 작동
-        if (userAnswers != null && !userAnswers.isEmpty()) {
+        // 결과창으로부터 배달 완료된 원본 AI 생성형 퀴즈 데이터 세트 수신
+        ArrayList<QuizModel> receivedQuizList = (ArrayList<QuizModel>) getIntent().getSerializableExtra("quizListSerializable");
+        if (receivedQuizList != null) {
+            quizList = receivedQuizList;
+        }
+
+        // 실데이터 검증을 기반으로 한 런타임 오답 선별 처리
+        if (userAnswers != null && !userAnswers.isEmpty() && !quizList.isEmpty()) {
             wrongIndices.clear();
-            for (int i = 0; i < answers.length; i++) {
-                if (i < userAnswers.size() && userAnswers.get(i) != answers[i]) {
-                    wrongIndices.add(i); // 틀린 문제 원본 인덱스 기록
+            for (int i = 0; i < quizList.size(); i++) {
+                if (i < userAnswers.size() && userAnswers.get(i) != quizList.get(i).getAnswerIndex()) {
+                    wrongIndices.add(i);
                 }
             }
         }
 
-        // 만약 데이터가 없거나 전부 맞았다면 예외 방지용 기본 가이드 설정
         if (wrongIndices.isEmpty()) {
             wrongIndices.add(0);
         }
 
-        // 화면에 실제 데이터 바인딩해서 텍스트 그려주기
         displayWrongAnswer();
 
         bindClick(R.id.backResult, v -> finish());
@@ -82,34 +75,39 @@ public class WrongAnswerActivity extends BaseActivity {
         }
     }
 
+    /**
+     * AI 데이터 주입형 실시간 렌더링 함수
+     */
     private void displayWrongAnswer() {
-        if (wrongIndices.isEmpty()) return;
+        if (wrongIndices.isEmpty() || quizList.isEmpty()) return;
 
         int originalIdx = wrongIndices.get(currentWrongIndex);
+        QuizModel currentQuiz = quizList.get(originalIdx);
 
         if (tvWrongProgress != null) {
             tvWrongProgress.setText("오답 " + (currentWrongIndex + 1) + "/" + wrongIndices.size());
         }
+
         if (tvWrongQuestion != null) {
-            tvWrongQuestion.setText("Q" + (originalIdx + 1) + ". " + questions[originalIdx]);
+            tvWrongQuestion.setText("Q" + (originalIdx + 1) + ". " + currentQuiz.getQuestion());
         }
 
-        // 실제 유저가 고른 보기 데이터 렌더링
         if (userAnswers != null && originalIdx < userAnswers.size()) {
             int userSelection = userAnswers.get(originalIdx);
-            if (tvMyAnswer != null && userSelection >= 0 && userSelection < options[originalIdx].length) {
-                tvMyAnswer.setText("❌ 내가 고른 답: " + options[originalIdx][userSelection]);
+            if (tvMyAnswer != null && userSelection >= 0 && userSelection < currentQuiz.getOptions().size()) {
+                tvMyAnswer.setText("✕ 내 답: " + currentQuiz.getOptions().get(userSelection));
             }
         } else {
-            if (tvMyAnswer != null) tvMyAnswer.setText("❌ 내가 고른 답: 없음");
+            if (tvMyAnswer != null) tvMyAnswer.setText("✕ 내 답: 선택 안 함");
         }
 
-        int correctSelection = answers[originalIdx];
-        if (tvRealAnswer != null) {
-            tvRealAnswer.setText("⭕ 실제 정답: " + options[originalIdx][correctSelection]);
+        int correctSelection = currentQuiz.getAnswerIndex();
+        if (tvRealAnswer != null && correctSelection >= 0 && correctSelection < currentQuiz.getOptions().size()) {
+            tvRealAnswer.setText("✓ 정답: " + currentQuiz.getOptions().get(correctSelection));
         }
+
         if (tvExplanation != null) {
-            tvExplanation.setText("💡 해설: " + explanations[originalIdx]);
+            tvExplanation.setText("💡 해설: " + currentQuiz.getExplanation());
         }
     }
 }
