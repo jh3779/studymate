@@ -6,8 +6,18 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    function verified() {
+      return signedIn()
+        && 'email_verified' in request.auth.token
+        && request.auth.token.email_verified == true;
+    }
+
     function owns(userId) {
       return signedIn() && request.auth.uid == userId;
+    }
+
+    function verifiedOwner(userId) {
+      return verified() && request.auth.uid == userId;
     }
 
     function hasExactFields(data, fields) {
@@ -101,6 +111,10 @@ service cloud.firestore {
         && data.score is int
         && data.score >= 0
         && data.score <= 100
+        && (2 * data.score - 1) * data.totalCount
+          <= 200 * data.correctCount
+        && 200 * data.correctCount
+          < (2 * data.score + 1) * data.totalCount
         && data.createdAt is timestamp;
     }
 
@@ -125,6 +139,7 @@ service cloud.firestore {
         && data.correctIndex is int
         && data.correctIndex >= 0
         && data.correctIndex <= 3
+        && data.selectedIndex != data.correctIndex
         && data.question is string
         && data.options is list
         && data.options.size() == 4
@@ -136,55 +151,124 @@ service cloud.firestore {
         && data.createdAt is timestamp;
     }
 
+    function noteExists(noteId) {
+      let notePath = /databases/$(database)/documents/study_notes/$(noteId);
+      return exists(notePath);
+    }
+
+    function noteBelongsTo(noteId, userId) {
+      let notePath = /databases/$(database)/documents/study_notes/$(noteId);
+      return get(notePath).data.userId == userId;
+    }
+
+    function quizExists(quizId) {
+      let quizPath = /databases/$(database)/documents/quizzes/$(quizId);
+      return exists(quizPath);
+    }
+
+    function wrongAnswerMatchesQuiz(data) {
+      let quizPath = /databases/$(database)/documents/quizzes/$(data.quizId);
+      let quiz = get(quizPath).data;
+      return quiz.userId == data.userId
+        && quiz.noteId == data.noteId
+        && quiz.answerIndex == data.correctIndex
+        && quiz.question == data.question
+        && quiz.options == data.options
+        && quiz.explanation == data.explanation;
+    }
+
     function keepsFields(fields) {
       return !request.resource.data.diff(resource.data).affectedKeys().hasAny(fields);
+    }
+
+    function createdNow(data) {
+      return data.createdAt == request.time;
     }
 
     match /users/{userId} {
       allow create: if owns(userId)
         && validUser(request.resource.data)
+        && createdNow(request.resource.data)
         && request.auth.token.email is string
         && request.resource.data.email == request.auth.token.email;
-      allow read, delete: if owns(userId);
-      allow update: if owns(userId)
+      allow read, delete: if verifiedOwner(userId);
+      allow update: if verifiedOwner(userId)
         && validUser(request.resource.data)
         && request.resource.data.email == request.auth.token.email
         && keepsFields(['email', 'createdAt']);
     }
 
     match /study_notes/{noteId} {
-      allow create: if owns(request.resource.data.userId)
-        && validStudyNote(request.resource.data);
-      allow read, delete: if owns(resource.data.userId);
-      allow update: if owns(resource.data.userId)
+      allow create: if verifiedOwner(request.resource.data.userId)
+        && validStudyNote(request.resource.data)
+        && createdNow(request.resource.data);
+      allow read, delete: if verifiedOwner(resource.data.userId);
+      allow update: if verifiedOwner(resource.data.userId)
         && validStudyNote(request.resource.data)
         && keepsFields(['userId', 'createdAt']);
     }
 
     match /quizzes/{quizId} {
-      allow create: if owns(request.resource.data.userId)
-        && validQuiz(request.resource.data);
-      allow read, delete: if owns(resource.data.userId);
-      allow update: if owns(resource.data.userId)
+      allow create: if verifiedOwner(request.resource.data.userId)
         && validQuiz(request.resource.data)
+        && createdNow(request.resource.data)
+        && noteExists(request.resource.data.noteId)
+        && noteBelongsTo(
+          request.resource.data.noteId,
+          request.resource.data.userId
+        );
+      allow read, delete: if verifiedOwner(resource.data.userId);
+      allow update: if verifiedOwner(resource.data.userId)
+        && validQuiz(request.resource.data)
+        && noteExists(request.resource.data.noteId)
+        && noteBelongsTo(
+          request.resource.data.noteId,
+          request.resource.data.userId
+        )
         && keepsFields(['noteId', 'userId', 'createdAt']);
     }
 
     match /quiz_results/{resultId} {
-      allow create: if owns(request.resource.data.userId)
-        && validQuizResult(request.resource.data);
-      allow read, delete: if owns(resource.data.userId);
-      allow update: if owns(resource.data.userId)
+      allow create: if verifiedOwner(request.resource.data.userId)
         && validQuizResult(request.resource.data)
+        && createdNow(request.resource.data)
+        && noteExists(request.resource.data.noteId)
+        && noteBelongsTo(
+          request.resource.data.noteId,
+          request.resource.data.userId
+        );
+      allow read, delete: if verifiedOwner(resource.data.userId);
+      allow update: if verifiedOwner(resource.data.userId)
+        && validQuizResult(request.resource.data)
+        && noteExists(request.resource.data.noteId)
+        && noteBelongsTo(
+          request.resource.data.noteId,
+          request.resource.data.userId
+        )
         && keepsFields(['userId', 'noteId', 'createdAt']);
     }
 
     match /wrong_answers/{wrongId} {
-      allow create: if owns(request.resource.data.userId)
-        && validWrongAnswer(request.resource.data);
-      allow read, delete: if owns(resource.data.userId);
-      allow update: if owns(resource.data.userId)
+      allow create: if verifiedOwner(request.resource.data.userId)
         && validWrongAnswer(request.resource.data)
+        && createdNow(request.resource.data)
+        && noteExists(request.resource.data.noteId)
+        && noteBelongsTo(
+          request.resource.data.noteId,
+          request.resource.data.userId
+        )
+        && quizExists(request.resource.data.quizId)
+        && wrongAnswerMatchesQuiz(request.resource.data);
+      allow read, delete: if verifiedOwner(resource.data.userId);
+      allow update: if verifiedOwner(resource.data.userId)
+        && validWrongAnswer(request.resource.data)
+        && noteExists(request.resource.data.noteId)
+        && noteBelongsTo(
+          request.resource.data.noteId,
+          request.resource.data.userId
+        )
+        && quizExists(request.resource.data.quizId)
+        && wrongAnswerMatchesQuiz(request.resource.data)
         && keepsFields(['userId', 'quizId', 'noteId', 'createdAt']);
     }
   }

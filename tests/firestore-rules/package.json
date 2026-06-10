@@ -5,7 +5,8 @@
     "node": ">=20"
   },
   "scripts": {
-    "test": "node --test firestore.rules.test.js",
+    "test": "npm run test:emulator",
+    "test:unit": "node --test firestore.rules.test.js",
     "test:emulator": "firebase emulators:exec --config ../../firebase.json --project studymate-rules-test --only firestore \"node --test firestore.rules.test.js\"",
     "audit": "npm audit --audit-level=moderate"
   },
