@@ -14,15 +14,31 @@ service cloud.firestore {
       return data.keys().hasAll(fields) && data.keys().hasOnly(fields);
     }
 
+    function hasRequiredAndAllowedFields(data, requiredFields, allowedFields) {
+      return data.keys().hasAll(requiredFields)
+        && data.keys().hasOnly(allowedFields);
+    }
+
     function validUser(data) {
-      return hasExactFields(data, ['email', 'nickname', 'createdAt'])
+      return hasRequiredAndAllowedFields(
+          data,
+          ['email', 'createdAt'],
+          ['email', 'nickname', 'createdAt']
+        )
         && data.email is string
-        && data.nickname is string
+        && (!('nickname' in data) || data.nickname is string)
         && data.createdAt is timestamp;
     }
 
     function validStudyNote(data) {
-      return hasExactFields(data, [
+      return hasRequiredAndAllowedFields(data, [
+          'userId',
+          'title',
+          'originalText',
+          'summary',
+          'keywords',
+          'createdAt'
+        ], [
           'userId',
           'title',
           'subject',
@@ -33,7 +49,7 @@ service cloud.firestore {
         ])
         && data.userId is string
         && data.title is string
-        && data.subject is string
+        && (!('subject' in data) || data.subject is string)
         && data.originalText is string
         && data.summary is list
         && data.keywords is list

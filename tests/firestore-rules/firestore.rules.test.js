@@ -127,6 +127,22 @@ test("allows valid documents that match the Android models", async () => {
   );
 });
 
+test("allows optional user and study note fields to be omitted", async () => {
+  const db = firestoreFor(ALICE);
+  const userWithoutNickname = userData();
+  const noteWithoutSubject = studyNoteData();
+
+  delete userWithoutNickname.nickname;
+  delete noteWithoutSubject.subject;
+
+  await assertSucceeds(
+    setDoc(doc(db, "users", ALICE.uid), userWithoutNickname)
+  );
+  await assertSucceeds(
+    setDoc(doc(db, "study_notes", "note-without-subject"), noteWithoutSubject)
+  );
+});
+
 test("rejects unauthenticated and cross-user access", async () => {
   const aliceDb = firestoreFor(ALICE);
   const bobDb = firestoreFor(BOB);
@@ -154,6 +170,15 @@ test("rejects unknown fields and invalid field types", async () => {
     setDoc(
       doc(db, "study_notes", "wrong-type"),
       studyNoteData({ summary: "not-a-list" })
+    )
+  );
+  await assertFails(
+    setDoc(doc(db, "users", ALICE.uid), userData({ nickname: 123 }))
+  );
+  await assertFails(
+    setDoc(
+      doc(db, "study_notes", "wrong-optional-type"),
+      studyNoteData({ subject: 123 })
     )
   );
   await assertFails(

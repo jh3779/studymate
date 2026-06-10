@@ -1,0 +1,8 @@
+{
+  "name": "studymate-workspace",
+  "private": true,
+  "scripts": {
+    "test:firestore-rules": "node tests/firestore-rules/node_modules/firebase-tools/lib/bin/firebase.js emulators:exec --config firebase.json --project studymate-rules-test --only firestore \"node --test tests/firestore-rules/firestore.rules.test.js\"",
+    "audit:firestore-rules": "node -e \"const {spawnSync}=require('node:child_process'); const result=spawnSync(process.execPath,[process.env.npm_execpath,'audit','--prefix','tests/firestore-rules','--audit-level=moderate'],{stdio:'inherit'}); process.exit(result.status ?? 1)\""
+  }
+}
