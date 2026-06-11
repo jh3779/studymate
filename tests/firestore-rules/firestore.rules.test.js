@@ -14,6 +14,7 @@ const {
   getDocs,
   orderBy,
   query,
+  runTransaction,
   serverTimestamp,
   setDoc,
   Timestamp,
@@ -339,6 +340,65 @@ test("supports FirestoreService batch write contracts", async () => {
     wrongAnswerData()
   );
   await assertSucceeds(resultBatch.commit());
+});
+
+test("supports idempotent quiz outcome transactions and separate attempts", async () => {
+  const db = firestoreFor(ALICE);
+  const bobDb = firestoreFor(BOB);
+  const resultRef = doc(db, "quiz_results", "attempt-1");
+  const wrongRef = doc(db, "wrong_answers", "attempt-1_quiz-1");
+
+  await assertSucceeds(
+    setDoc(doc(db, "study_notes", "note-1"), studyNoteData())
+  );
+  await assertSucceeds(setDoc(doc(db, "quizzes", "quiz-1"), quizData()));
+
+  await assertSucceeds(runTransaction(db, async (transaction) => {
+    const resultSnapshot = await transaction.get(resultRef);
+    const wrongSnapshot = await transaction.get(wrongRef);
+
+    if (resultSnapshot.exists() || wrongSnapshot.exists()) {
+      throw new Error("Expected new outcome documents");
+    }
+
+    transaction.set(resultRef, quizResultData());
+    transaction.set(wrongRef, wrongAnswerData());
+  }));
+
+  await assertSucceeds(runTransaction(db, async (transaction) => {
+    const resultSnapshot = await transaction.get(resultRef);
+    const wrongSnapshot = await transaction.get(wrongRef);
+
+    if (!resultSnapshot.exists() || !wrongSnapshot.exists()) {
+      throw new Error("Expected existing outcome documents");
+    }
+
+    transaction.update(resultRef, {
+      correctCount: 1,
+      score: 33,
+    });
+    transaction.update(wrongRef, {
+      selectedIndex: 2,
+    });
+  }));
+
+  await assertSucceeds(
+    setDoc(
+      doc(db, "quiz_results", "attempt-2"),
+      quizResultData({ correctCount: 3, score: 100 })
+    )
+  );
+
+  const attempts = await assertSucceeds(getDocs(query(
+    collection(db, "quiz_results"),
+    where("userId", "==", ALICE.uid)
+  )));
+  if (attempts.size !== 2) {
+    throw new Error(`Expected two attempts, received ${attempts.size}`);
+  }
+
+  await assertFails(getDoc(doc(bobDb, "quiz_results", "attempt-1")));
+  await assertFails(getDoc(doc(bobDb, "wrong_answers", "attempt-1_quiz-1")));
 });
 
 test("supports user-scoped ordered query contracts", async () => {

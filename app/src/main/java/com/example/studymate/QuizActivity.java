@@ -10,8 +10,14 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 public class QuizActivity extends BaseActivity {
+    private static final String STATE_CURRENT_INDEX = "currentIndex";
+    private static final String STATE_SELECTED_INDEX = "selectedIndex";
+    private static final String STATE_CORRECT_COUNT = "correctCount";
+    private static final String STATE_USER_ANSWERS = "userAnswers";
+    private static final String STATE_ATTEMPT_ID = "attemptId";
 
     private ArrayList<QuizModel> quizList = new ArrayList<>();
     private TextView progressText;
@@ -24,6 +30,7 @@ public class QuizActivity extends BaseActivity {
     private int correctCount = 0;
     private ArrayList<Integer> userAnswers = new ArrayList<>();
     private String noteId = "";
+    private String attemptId = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,6 +60,7 @@ public class QuizActivity extends BaseActivity {
         parseQuizzesJson(quizzesJson);
 
         if (!quizList.isEmpty()) {
+            restoreState(savedInstanceState);
             renderQuestion();
         } else {
             showShortToast("퀴즈 데이터를 불러오지 못했습니다.");
@@ -106,8 +114,7 @@ public class QuizActivity extends BaseActivity {
     }
 
     private void renderQuestion() {
-        selectedIndex = -1;
-        nextButton.setEnabled(false);
+        nextButton.setEnabled(selectedIndex >= 0);
 
         QuizModel currentQuiz = quizList.get(currentIndex);
         nextButton.setText(currentIndex == quizList.size() - 1 ? "결과 보기" : "다음 문제");
@@ -117,8 +124,11 @@ public class QuizActivity extends BaseActivity {
         for (int i = 0; i < optionViews.length; i++) {
             if (i < currentQuiz.getOptions().size()) {
                 optionViews[i].setText(currentQuiz.getOptions().get(i));
-                optionViews[i].setBackgroundResource(R.drawable.bg_option);
-                updateOptionAccessibility(i, false);
+                boolean selected = i == selectedIndex;
+                optionViews[i].setBackgroundResource(
+                        selected ? R.drawable.bg_option_selected : R.drawable.bg_option
+                );
+                updateOptionAccessibility(i, selected);
             }
         }
     }
@@ -142,6 +152,9 @@ public class QuizActivity extends BaseActivity {
     }
 
     private void moveNext() {
+        if (selectedIndex < 0) {
+            return;
+        }
         userAnswers.add(selectedIndex);
         QuizModel currentQuiz = quizList.get(currentIndex);
 
@@ -155,6 +168,7 @@ public class QuizActivity extends BaseActivity {
             intent.putExtra("correctCount", correctCount);
             intent.putExtra("totalCount", quizList.size());
             intent.putExtra("noteId", noteId);
+            intent.putExtra("attemptId", attemptId);
             intent.putIntegerArrayListExtra("userAnswers", userAnswers);
             intent.putExtra("quizListSerializable", quizList);
             startActivity(intent);
@@ -163,6 +177,43 @@ public class QuizActivity extends BaseActivity {
         }
 
         currentIndex++;
+        selectedIndex = -1;
         renderQuestion();
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putInt(STATE_CURRENT_INDEX, currentIndex);
+        outState.putInt(STATE_SELECTED_INDEX, selectedIndex);
+        outState.putInt(STATE_CORRECT_COUNT, correctCount);
+        outState.putIntegerArrayList(STATE_USER_ANSWERS, userAnswers);
+        outState.putString(STATE_ATTEMPT_ID, attemptId);
+    }
+
+    private void restoreState(Bundle savedInstanceState) {
+        if (savedInstanceState == null) {
+            attemptId = UUID.randomUUID().toString();
+            return;
+        }
+
+        currentIndex = savedInstanceState.getInt(STATE_CURRENT_INDEX, 0);
+        selectedIndex = savedInstanceState.getInt(STATE_SELECTED_INDEX, -1);
+        correctCount = savedInstanceState.getInt(STATE_CORRECT_COUNT, 0);
+        ArrayList<Integer> restoredAnswers =
+                savedInstanceState.getIntegerArrayList(STATE_USER_ANSWERS);
+        if (restoredAnswers != null) {
+            userAnswers = restoredAnswers;
+        }
+        attemptId = savedInstanceState.getString(STATE_ATTEMPT_ID, "");
+        if (attemptId == null || attemptId.trim().isEmpty()) {
+            attemptId = UUID.randomUUID().toString();
+        }
+        if (currentIndex < 0 || currentIndex >= quizList.size()) {
+            currentIndex = 0;
+            selectedIndex = -1;
+            correctCount = 0;
+            userAnswers.clear();
+        }
     }
 }

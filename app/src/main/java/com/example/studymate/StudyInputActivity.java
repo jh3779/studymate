@@ -46,6 +46,8 @@ public class StudyInputActivity extends BaseActivity {
     private final ExecutorService importExecutor = Executors.newSingleThreadExecutor();
     private ActivityResultLauncher<String[]> pdfPickerLauncher;
     private ActivityResultLauncher<String[]> imagePickerLauncher;
+    private boolean loading;
+    private boolean importing;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -110,9 +112,7 @@ public class StudyInputActivity extends BaseActivity {
         }
 
         errorText.setVisibility(View.GONE);
-        loadingBox.setVisibility(View.VISIBLE);
-        generateButton.setEnabled(false);
-        generateButton.setText("AI 요약 생성 중...");
+        setLoading(true);
 
         aiService.generateSummary(content, new AiService.SummaryCallback() {
             @Override
@@ -179,15 +179,13 @@ public class StudyInputActivity extends BaseActivity {
     }
 
     private void setLoading(boolean loading) {
+        this.loading = loading;
         loadingBox.setVisibility(loading ? View.VISIBLE : View.GONE);
         if (!loading) {
             loadingBox.setText("⏳ AI 요약 생성 중...\n잠시만 기다려주세요");
         }
-        generateButton.setEnabled(!loading);
         generateButton.setText(loading ? "AI 요약 생성 중..." : "AI 요약 생성");
-        titleInput.setEnabled(!loading);
-        subjectInput.setEnabled(!loading);
-        contentInput.setEnabled(!loading);
+        updateInputEnabledState();
     }
 
     private void showError(String message) {
@@ -205,7 +203,7 @@ public class StudyInputActivity extends BaseActivity {
             } catch (Exception e) {
                 runOnUiThread(() -> {
                     setImporting(false, "");
-                    showError("⚠ PDF 텍스트 추출에 실패했습니다. 텍스트가 포함된 PDF인지 확인해주세요.");
+                    showError("⚠ PDF 텍스트 추출에 실패했습니다. 텍스트 PDF인지 확인하거나 스캔 자료는 이미지 OCR로 가져와주세요.");
                 });
             }
         });
@@ -238,7 +236,7 @@ public class StudyInputActivity extends BaseActivity {
         setImporting(false, "");
         String normalized = text == null ? "" : text.trim();
         if (normalized.length() < 30) {
-            showError("⚠ " + sourceLabel + "에서 30자 이상의 학습 내용을 찾지 못했습니다.");
+            showError("⚠ " + sourceLabel + "에서 30자 이상의 학습 내용을 찾지 못했습니다. 스캔 PDF는 이미지로 변환한 뒤 이미지 OCR을 사용해주세요.");
             return;
         }
         if (normalized.length() > 5000) {
@@ -253,15 +251,21 @@ public class StudyInputActivity extends BaseActivity {
     }
 
     private void setImporting(boolean importing, String message) {
-        titleInput.setEnabled(!importing);
-        subjectInput.setEnabled(!importing);
-        contentInput.setEnabled(!importing);
-        generateButton.setEnabled(!importing);
-        importPdfButton.setEnabled(!importing);
-        importImageButton.setEnabled(!importing);
+        this.importing = importing;
+        updateInputEnabledState();
         if (importing) {
             showImportStatus(message);
         }
+    }
+
+    private void updateInputEnabledState() {
+        boolean enabled = !loading && !importing;
+        titleInput.setEnabled(enabled);
+        subjectInput.setEnabled(enabled);
+        contentInput.setEnabled(enabled);
+        generateButton.setEnabled(enabled);
+        importPdfButton.setEnabled(enabled);
+        importImageButton.setEnabled(enabled);
     }
 
     private void showImportStatus(String message) {

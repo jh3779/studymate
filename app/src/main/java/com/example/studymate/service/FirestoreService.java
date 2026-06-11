@@ -12,6 +12,7 @@ import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
+import com.google.firebase.firestore.Transaction;
 import com.google.firebase.firestore.WriteBatch;
 import com.google.android.gms.tasks.Tasks;
 
@@ -216,37 +217,65 @@ public class FirestoreService {
             List<WrongAnswerModel> wrongAnswers,
             SaveCallback callback
     ) {
-        if (result == null || isBlank(result.getUserId()) || isBlank(result.getNoteId())) {
+        if (result == null
+                || isBlank(result.getId())
+                || isBlank(result.getUserId())
+                || isBlank(result.getNoteId())) {
             callback.onFailure("퀴즈 결과 정보가 올바르지 않습니다.");
             return;
         }
 
-        WriteBatch batch = firestore.batch();
         DocumentReference resultDocument = firestore.collection(QUIZ_RESULTS)
-                .document(result.getNoteId());
+                .document(result.getId());
         result.setId(resultDocument.getId());
-        batch.set(resultDocument, withCreatedAt(result.toMap()));
 
-        if (wrongAnswers != null) {
-            for (WrongAnswerModel wrongAnswer : wrongAnswers) {
-                if (wrongAnswer == null
-                        || isBlank(wrongAnswer.getUserId())
-                        || isBlank(wrongAnswer.getQuizId())
-                        || isBlank(wrongAnswer.getNoteId())) {
-                    callback.onFailure("오답 정보가 올바르지 않습니다.");
-                    return;
-                }
-
-                String documentId = wrongAnswer.getNoteId() + "_" + wrongAnswer.getQuizId();
-                DocumentReference wrongDocument =
-                        firestore.collection(WRONG_ANSWERS).document(documentId);
-                wrongAnswer.setId(documentId);
-                batch.set(wrongDocument, withCreatedAt(wrongAnswer.toMap()));
+        List<WrongAnswerModel> safeWrongAnswers = wrongAnswers == null
+                ? new ArrayList<>()
+                : wrongAnswers;
+        Map<DocumentReference, WrongAnswerModel> wrongDocuments = new HashMap<>();
+        for (WrongAnswerModel wrongAnswer : safeWrongAnswers) {
+            if (wrongAnswer == null
+                    || isBlank(wrongAnswer.getUserId())
+                    || isBlank(wrongAnswer.getQuizId())
+                    || isBlank(wrongAnswer.getNoteId())) {
+                callback.onFailure("오답 정보가 올바르지 않습니다.");
+                return;
             }
+
+            String documentId = resultDocument.getId() + "_" + wrongAnswer.getQuizId();
+            DocumentReference wrongDocument =
+                    firestore.collection(WRONG_ANSWERS).document(documentId);
+            wrongAnswer.setId(documentId);
+            wrongDocuments.put(wrongDocument, wrongAnswer);
         }
 
-        batch.commit()
-                .addOnSuccessListener(unused -> callback.onSuccess(resultDocument.getId()))
+        firestore.runTransaction((Transaction.Function<String>) transaction -> {
+                    DocumentSnapshot resultSnapshot = transaction.get(resultDocument);
+                    Map<DocumentReference, DocumentSnapshot> wrongSnapshots = new HashMap<>();
+                    for (DocumentReference wrongDocument : wrongDocuments.keySet()) {
+                        wrongSnapshots.put(wrongDocument, transaction.get(wrongDocument));
+                    }
+
+                    if (resultSnapshot.exists()) {
+                        transaction.update(resultDocument, withoutCreatedAt(result.toMap()));
+                    } else {
+                        transaction.set(resultDocument, withCreatedAt(result.toMap()));
+                    }
+
+                    for (Map.Entry<DocumentReference, WrongAnswerModel> entry
+                            : wrongDocuments.entrySet()) {
+                        DocumentReference wrongDocument = entry.getKey();
+                        WrongAnswerModel wrongAnswer = entry.getValue();
+                        DocumentSnapshot wrongSnapshot = wrongSnapshots.get(wrongDocument);
+                        if (wrongSnapshot.exists()) {
+                            transaction.update(wrongDocument, withoutCreatedAt(wrongAnswer.toMap()));
+                        } else {
+                            transaction.set(wrongDocument, withCreatedAt(wrongAnswer.toMap()));
+                        }
+                    }
+                    return resultDocument.getId();
+                })
+                .addOnSuccessListener(callback::onSuccess)
                 .addOnFailureListener(error -> callback.onFailure(toUserMessage(error)));
     }
 
@@ -339,6 +368,12 @@ public class FirestoreService {
         if (values.get("createdAt") == null) {
             values.put("createdAt", FieldValue.serverTimestamp());
         }
+        return values;
+    }
+
+    private Map<String, Object> withoutCreatedAt(Map<String, Object> source) {
+        Map<String, Object> values = new HashMap<>(source);
+        values.remove("createdAt");
         return values;
     }
 

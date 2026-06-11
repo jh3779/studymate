@@ -91,6 +91,8 @@ dependencies {
     implementation(libs.material)
     implementation(libs.activity)
     implementation(libs.constraintlayout)
+    implementation("androidx.lifecycle:lifecycle-livedata:2.6.2")
+    implementation("androidx.lifecycle:lifecycle-viewmodel:2.6.2")
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.auth)

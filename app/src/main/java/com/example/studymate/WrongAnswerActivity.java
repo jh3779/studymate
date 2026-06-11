@@ -11,7 +11,7 @@ import java.util.ArrayList;
  */
 public class WrongAnswerActivity extends BaseActivity {
 
-    // 로컬 하드코딩 배열 완전 파괴 ➡️ 동적 인텐트 유동형 리스트로 전환
+    // 결과 화면에서 전달된 오답 또는 Firestore에 저장된 오답을 동적으로 표시한다.
     private ArrayList<QuizModel> quizList = new ArrayList<>();
     private ArrayList<Integer> wrongIndices = new ArrayList<>();
     private ArrayList<Integer> userAnswers = new ArrayList<>();
