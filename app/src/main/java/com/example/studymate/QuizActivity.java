@@ -23,6 +23,7 @@ public class QuizActivity extends BaseActivity {
     private int selectedIndex = -1;
     private int correctCount = 0;
     private ArrayList<Integer> userAnswers = new ArrayList<>();
+    private String noteId = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,6 +48,7 @@ public class QuizActivity extends BaseActivity {
         }
         nextButton.setOnClickListener(v -> moveNext());
 
+        noteId = getIntent().getStringExtra("noteId");
         String quizzesJson = getIntent().getStringExtra("quizzesJson");
         parseQuizzesJson(quizzesJson);
 
@@ -74,8 +76,10 @@ public class QuizActivity extends BaseActivity {
                 }
                 int answerIndex = obj.optInt("answerIndex", 0);
                 String explanation = obj.optString("explanation", "해설이 제공되지 않는 문제입니다.");
+                String quizId = obj.optString("id", null);
 
                 QuizModel quiz = new QuizModel();
+                quiz.setId(quizId);
                 quiz.setQuestion(question);
                 quiz.setOptions(optionsList);
                 quiz.setAnswerIndex(answerIndex);
@@ -126,6 +130,7 @@ public class QuizActivity extends BaseActivity {
             Intent intent = new Intent(this, QuizResultActivity.class);
             intent.putExtra("correctCount", correctCount);
             intent.putExtra("totalCount", quizList.size());
+            intent.putExtra("noteId", noteId);
             intent.putIntegerArrayListExtra("userAnswers", userAnswers);
             intent.putExtra("quizListSerializable", quizList);
             startActivity(intent);

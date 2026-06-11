@@ -91,7 +91,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
             android:gravity="center"
-            android:text="오답노트에서 틀린 문제를 확인할 수 있습니다."
+            android:text="저장 상태를 확인하는 중입니다."
             android:textColor="@color/study_text_muted"
             android:textSize="14sp" />
     </LinearLayout>
