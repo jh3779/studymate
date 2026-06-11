@@ -50,6 +50,7 @@ public class AuthService {
             return;
         }
 
+        firebaseAuth.setLanguageCode("ko");
         user.sendEmailVerification()
                 .addOnSuccessListener(unused -> callback.onSuccess())
                 .addOnFailureListener(error -> callback.onFailure(toUserMessage(error)));
