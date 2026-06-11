@@ -21,6 +21,13 @@ function getOpenAI() {
 const app = express();
 app.use(express.json());
 
+app.get("/health", (req, res) => {
+  return res.status(200).json({
+    service: "studymate-api",
+    status: "ok",
+  });
+});
+
 const verifyAuth = createVerifyAuth(admin);
 app.use(verifyAuth);
 
@@ -170,6 +177,7 @@ app.post("/quiz", async (req, res) => {
 
 exports.api = onRequest(
   {
+    region: "asia-northeast3",
     secrets: [openaiApiKey],
     timeoutSeconds: 120,
   },

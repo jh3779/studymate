@@ -55,11 +55,12 @@ npm run deploy
 firebase deploy --only functions
 ```
 
+`api` 함수는 `asia-northeast3` 리전에 배포되도록 코드에 명시되어 있다.
 배포 완료 후 터미널에 출력되는 Functions URL을 복사한다.
 
 ```
 ✔  functions[api]: Deployed.
-Function URL (api): https://api-<hash>-uc.a.run.app
+Function URL (api): https://api-<project-number>.asia-northeast3.run.app
 ```
 
 ---
@@ -69,8 +70,41 @@ Function URL (api): https://api-<hash>-uc.a.run.app
 Functions 배포 후 출력되는 `api` HTTPS 엔드포인트를 확인하고, 프로젝트 루트의 `local.properties`(Git에 포함되지 않음)에 추가한다.
 
 ```properties
-ai.base.url=https://api-<hash>-uc.a.run.app
+ai.base.url=https://api-<project-number>.asia-northeast3.run.app
 ```
+
+### 배포 직후 엔드포인트 검증
+
+Android 설정 전에 반드시 다음 두 요청을 실행한다.
+
+```bash
+curl -i https://api-<project-number>.asia-northeast3.run.app/health
+```
+
+정상 응답:
+
+```json
+{"service":"studymate-api","status":"ok"}
+```
+
+인증 없이 AI 엔드포인트를 호출하면 반드시 `401`과 JSON 오류가 반환되어야 한다.
+
+```bash
+curl -i -X POST \
+  https://api-<project-number>.asia-northeast3.run.app/summary \
+  -H "Content-Type: application/json" \
+  -d '{"text":"test"}'
+```
+
+정상 응답:
+
+```json
+{"error":"인증이 필요합니다."}
+```
+
+`200 Hello World!`가 반환되면 Firebase Functions 코드가 아닌 Cloud Run 샘플
+리비전에 트래픽이 연결된 것이다. Cloud Run 콘솔에서 `api` 서비스의 최신 리비전과
+트래픽을 확인한 뒤 `firebase deploy --only functions:api`를 다시 실행한다.
 
 > **로컬 에뮬레이터 사용 시**
 > ```bash

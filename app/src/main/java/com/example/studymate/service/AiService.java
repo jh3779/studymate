@@ -111,6 +111,10 @@ public class AiService {
                         failOnMain(callback, extractErrorMessage(response, "서버 오류가 발생했습니다. 다시 시도해주세요."));
                         return;
                     }
+                    if (!isJsonResponse(response)) {
+                        failOnMain(callback, invalidServerResponseMessage());
+                        return;
+                    }
                     if (response.body() == null) {
                         failOnMain(callback, "서버 오류가 발생했습니다. 다시 시도해주세요.");
                         return;
@@ -157,6 +161,10 @@ public class AiService {
                 try (Response response = client.newCall(request).execute()) {
                     if (!response.isSuccessful()) {
                         failOnMain(callback, extractErrorMessage(response, "서버 오류가 발생했습니다. 다시 시도해주세요."));
+                        return;
+                    }
+                    if (!isJsonResponse(response)) {
+                        failOnMain(callback, invalidServerResponseMessage());
                         return;
                     }
                     if (response.body() == null) {
@@ -270,6 +278,15 @@ public class AiService {
             Log.w(TAG, "서버 오류 body 파싱 실패", e);
             return fallback;
         }
+    }
+
+    private boolean isJsonResponse(Response response) {
+        String contentType = response.header("Content-Type", "");
+        return contentType.toLowerCase(java.util.Locale.ROOT).contains("application/json");
+    }
+
+    private String invalidServerResponseMessage() {
+        return "AI 서버 응답이 올바르지 않습니다. local.properties의 ai.base.url과 Functions 배포 상태를 확인해주세요.";
     }
 
     private void failOnMain(SummaryCallback callback, String message) {

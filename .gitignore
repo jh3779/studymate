@@ -20,6 +20,8 @@ firebase-debug.log
 firebase-debug.*.log
 firestore-debug.log
 firestore-debug.*.log
+firepit-log.txt
+.tools/
 
 # Local secrets
 key/
