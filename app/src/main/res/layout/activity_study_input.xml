@@ -44,7 +44,7 @@
             android:layout_height="@dimen/field_height"
             android:layout_marginTop="8dp"
             android:background="@drawable/bg_input"
-            android:hint="데이터베이스 기본키 정리"
+            android:hint="학습 제목을 입력해주세요."
             android:inputType="text"
             android:textColor="@color/study_text"
             android:textColorHint="@color/study_text_muted" />
@@ -64,7 +64,7 @@
             android:layout_height="@dimen/field_height"
             android:layout_marginTop="8dp"
             android:background="@drawable/bg_input"
-            android:hint="데이터베이스"
+            android:hint="과목명을 입력해주세요."
             android:inputType="text"
             android:textColor="@color/study_text"
             android:textColorHint="@color/study_text_muted" />
@@ -90,6 +90,47 @@
             android:paddingTop="14dp"
             android:textColor="@color/study_text"
             android:textColorHint="@color/study_text_muted" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:orientation="horizontal"
+            android:weightSum="2">
+
+            <Button
+                android:id="@+id/importPdfButton"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_marginEnd="6dp"
+                android:layout_weight="1"
+                android:background="@drawable/bg_button_secondary"
+                android:text="PDF 가져오기"
+                android:textAllCaps="false"
+                android:textColor="@color/study_text"
+                android:textSize="15sp" />
+
+            <Button
+                android:id="@+id/importImageButton"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_marginStart="6dp"
+                android:layout_weight="1"
+                android:background="@drawable/bg_button_secondary"
+                android:text="이미지 OCR"
+                android:textAllCaps="false"
+                android:textColor="@color/study_text"
+                android:textSize="15sp" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/importStatusText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:textColor="@color/study_text_muted"
+            android:textSize="14sp"
+            android:visibility="gone" />
 
         <TextView
             android:id="@+id/inputErrorText"

@@ -34,7 +34,6 @@ public class WrongAnswerActivity extends BaseActivity {
         tvMyAnswer      = findViewById(R.id.optionOne);
         tvRealAnswer    = findViewById(R.id.optionTwo);
         tvExplanation   = findViewById(R.id.optionThree);
-
         retryQuizButton = findViewById(R.id.retryQuizButton);
 
         userAnswers = (ArrayList<Integer>) getIntent().getSerializableExtra("userAnswers");
@@ -55,18 +54,12 @@ public class WrongAnswerActivity extends BaseActivity {
             }
         }
 
-        if (wrongIndices.isEmpty()) {
-            wrongIndices.add(0);
-        }
-
         displayWrongAnswer();
 
         bindClick(R.id.backResult, v -> finish());
         bindClick(R.id.wrongHomeTab, v -> goToAndClear(HomeActivity.class));
         bindClick(R.id.wrongMyPageTab, v -> goTo(MyPageActivity.class));
 
-        if (findViewById(R.id.retryQuizButton) != null) {
-            findViewById(R.id.retryQuizButton).setOnClickListener(v -> {
         if (retryQuizButton != null) {
             retryQuizButton.setOnClickListener(v -> {
                 if (wrongIndices.isEmpty()) {

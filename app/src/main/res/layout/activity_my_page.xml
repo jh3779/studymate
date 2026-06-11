@@ -33,7 +33,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="44dp"
-                android:text="user@example.com\n회원"
+                android:text="로그인 사용자\n회원"
                 android:textColor="@color/study_text"
                 android:textSize="20sp"
                 android:textStyle="bold" />
@@ -46,25 +46,27 @@
                 android:weightSum="2">
 
                 <TextView
+                    android:id="@+id/myStudyCountText"
                     android:layout_width="0dp"
                     android:layout_height="92dp"
                     android:layout_marginEnd="8dp"
                     android:layout_weight="1"
                     android:background="@drawable/bg_card"
                     android:gravity="center"
-                    android:text="12\n학습 기록"
+                    android:text="0\n학습 기록"
                     android:textColor="@color/study_text"
                     android:textSize="20sp"
                     android:textStyle="bold" />
 
                 <TextView
+                    android:id="@+id/myQuizCountText"
                     android:layout_width="0dp"
                     android:layout_height="92dp"
                     android:layout_marginStart="8dp"
                     android:layout_weight="1"
                     android:background="@drawable/bg_card"
                     android:gravity="center"
-                    android:text="36\n퀴즈 풀이"
+                    android:text="0\n퀴즈 풀이"
                     android:textColor="@color/study_text"
                     android:textSize="20sp"
                     android:textStyle="bold" />

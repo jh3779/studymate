@@ -28,7 +28,7 @@ import okhttp3.Response;
 public class AiService {
 
     // local.properties의 ai.base.url 값을 사용 (git에 포함되지 않음)
-    private static final String BASE_URL = BuildConfig.AI_BASE_URL;
+    private static final String BASE_URL = normalizeBaseUrl(BuildConfig.AI_BASE_URL);
 
     private static final String TAG = "AiService";
     private static final MediaType JSON_TYPE = MediaType.get("application/json; charset=utf-8");
@@ -86,6 +86,10 @@ public class AiService {
                 failOnMain(callback, "AI 서버 주소가 설정되지 않았습니다. local.properties의 ai.base.url을 확인해주세요.");
                 return;
             }
+            if (text == null || text.trim().isEmpty()) {
+                failOnMain(callback, "요약할 학습 내용이 없습니다.");
+                return;
+            }
             try {
                 String token = fetchIdToken();
                 if (token == null) {
@@ -128,6 +132,10 @@ public class AiService {
         executor.execute(() -> {
             if (BASE_URL.isEmpty()) {
                 failOnMain(callback, "AI 서버 주소가 설정되지 않았습니다. local.properties의 ai.base.url을 확인해주세요.");
+                return;
+            }
+            if (text == null || text.trim().isEmpty()) {
+                failOnMain(callback, "퀴즈를 만들 학습 내용이 없습니다.");
                 return;
             }
             try {
@@ -175,7 +183,12 @@ public class AiService {
         List<String> summary = toStringList(obj.getJSONArray("summary"));
         List<String> keywords = toStringList(obj.getJSONArray("keywords"));
 
-        if (summary.isEmpty()) throw new Exception("summary 필드가 비어 있음");
+        if (summary.size() < 3 || summary.size() > 5) {
+            throw new Exception("summary 필드는 3~5개여야 함");
+        }
+        if (keywords.size() != 3) {
+            throw new Exception("keywords 필드는 3개여야 함");
+        }
         return new SummaryResult(summary, keywords);
     }
 
@@ -200,7 +213,7 @@ public class AiService {
             quizzes.add(new QuizItem(question, options, answerIndex, explanation));
         }
 
-        if (quizzes.isEmpty()) throw new Exception("유효한 퀴즈 없음");
+        if (quizzes.size() != 3) throw new Exception("유효한 퀴즈는 3개여야 함");
         return quizzes;
     }
 
@@ -224,6 +237,15 @@ public class AiService {
     }
 
     // ─── 헬퍼 ────────────────────────────────────────────────────
+
+    private static String normalizeBaseUrl(String url) {
+        if (url == null) return "";
+        String normalized = url.trim();
+        while (normalized.endsWith("/")) {
+            normalized = normalized.substring(0, normalized.length() - 1);
+        }
+        return normalized;
+    }
 
     // 백그라운드 스레드에서 호출. 로그인 안 됐거나 토큰 취득 실패·타임아웃 시 null 반환.
     private String fetchIdToken() {

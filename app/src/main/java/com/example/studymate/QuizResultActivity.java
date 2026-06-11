@@ -44,8 +44,6 @@ public class QuizResultActivity extends BaseActivity {
             quizList = receivedQuizList;
         }
 
-        // 지훈이 피드백 반영: 중복 선언 완전 제거 및 보정 수식 반영 완료
-        int wrongCount = Math.max(0, totalCount - correctCount);
         int wrongCount = totalCount - correctCount;
         int score = totalCount == 0 ? 0 : Math.round((correctCount * 100f) / totalCount);
 
@@ -65,18 +63,6 @@ public class QuizResultActivity extends BaseActivity {
             }
         }
 
-        uploadWrongAnswersToFirestore();
-
-        bindClick(R.id.showWrongButton, v -> {
-            if (userAnswers == null || userAnswers.isEmpty()) {
-                showShortToast("전달된 유저 답안 데이터가 없습니다.");
-                return;
-            }
-            Intent intent = new Intent(this, WrongAnswerActivity.class);
-            intent.putIntegerArrayListExtra("userAnswers", userAnswers);
-            intent.putExtra("quizListSerializable", quizList);
-            startActivity(intent);
-        });
         // 오답 상세 버튼 비활성화 및 가드 처리
         if (showWrongButton != null) {
             if (wrongCount == 0) {
@@ -171,7 +157,6 @@ public class QuizResultActivity extends BaseActivity {
             }
         }
     }
-}
 
     /**
      * wrongAnswerMatchesQuiz() 규칙 매칭

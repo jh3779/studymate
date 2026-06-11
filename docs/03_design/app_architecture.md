@@ -57,16 +57,16 @@ flowchart TB
 
 | 화면 | 파일 | 상태 |
 | --- | --- | --- |
-| SplashScreen | `SplashActivity.java`, `activity_splash.xml` | 더미 로그인 상태 분기 구현 |
-| LoginScreen | `LoginActivity.java`, `activity_login.xml` | 더미 로그인 구현 |
-| SignUpScreen | `SignUpActivity.java`, `activity_signup.xml` | 입력 검증 및 더미 가입 구현 |
-| HomeScreen | `HomeActivity.java`, `activity_home.xml` | 더미 통계/최근 기록/하단 탭 구현 |
-| StudyInputScreen | `StudyInputActivity.java`, `activity_study_input.xml` | 입력 검증 및 더미 AI 로딩 구현 |
-| SummaryResultScreen | `SummaryResultActivity.java`, `activity_summary_result.xml` | 더미 요약/키워드 표시 구현 |
-| QuizScreen | `QuizActivity.java`, `activity_quiz.xml` | 더미 3문제 풀이 구현 |
-| QuizResultScreen | `QuizResultActivity.java`, `activity_quiz_result.xml` | 정답률 표시 구현 |
-| WrongAnswerScreen | `WrongAnswerActivity.java`, `activity_wrong_answer.xml` | 더미 오답 상세 구현 |
-| MyPageScreen | `MyPageActivity.java`, `activity_my_page.xml` | 더미 통계 및 로그아웃 구현 |
+| SplashScreen | `SplashActivity.java`, `activity_splash.xml` | Firebase 로그인 상태 분기 |
+| LoginScreen | `LoginActivity.java`, `activity_login.xml` | Firebase 이메일 로그인 |
+| SignUpScreen | `SignUpActivity.java`, `activity_signup.xml` | 입력 검증 및 Firebase 회원가입 |
+| HomeScreen | `HomeActivity.java`, `activity_home.xml` | Firestore 통계/최근 기록/하단 탭 |
+| StudyInputScreen | `StudyInputActivity.java`, `activity_study_input.xml` | 직접 입력, PDF 텍스트 추출, 이미지 OCR, AI 요약 요청 |
+| SummaryResultScreen | `SummaryResultActivity.java`, `activity_summary_result.xml` | 저장된 요약/키워드 표시 및 AI 퀴즈 요청 |
+| QuizScreen | `QuizActivity.java`, `activity_quiz.xml` | AI 생성 퀴즈 풀이 |
+| QuizResultScreen | `QuizResultActivity.java`, `activity_quiz_result.xml` | 정답률 표시, 결과 저장, 오답 저장 |
+| WrongAnswerScreen | `WrongAnswerActivity.java`, `activity_wrong_answer.xml` | 실제 퀴즈 데이터 기반 오답 상세 |
+| MyPageScreen | `MyPageActivity.java`, `activity_my_page.xml` | 사용자 이메일, Firestore 통계, 로그아웃 |
 
 ## 5. 개발 시 참고사항
 

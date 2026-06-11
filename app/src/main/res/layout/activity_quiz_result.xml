@@ -57,7 +57,6 @@
             android:layout_marginTop="10dp"
             android:background="@drawable/bg_card"
             android:padding="@dimen/card_padding"
-            android:text="Q3. 기본키의 개수 제한은?\n내가 선택: 여러 개\n정답: 테이블당 하나"
             android:textColor="@color/study_text"
             android:textSize="17sp"
             android:lineSpacingExtra="5dp" />
