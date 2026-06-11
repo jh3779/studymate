@@ -22,6 +22,8 @@ firebase-debug.*.log
 .env
 .env.local
 .env.*.local
+team-debug.keystore
+keystore.properties
 
 # Claude Code
 CLAUDE.md

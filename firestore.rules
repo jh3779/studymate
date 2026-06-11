@@ -6,44 +6,270 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    function verified() {
+      return signedIn()
+        && 'email_verified' in request.auth.token
+        && request.auth.token.email_verified == true;
+    }
+
     function owns(userId) {
       return signedIn() && request.auth.uid == userId;
     }
 
-    function keepsOwner() {
-      return resource.data.userId == request.resource.data.userId;
+    function verifiedOwner(userId) {
+      return verified() && request.auth.uid == userId;
+    }
+
+    function hasExactFields(data, fields) {
+      return data.keys().hasAll(fields) && data.keys().hasOnly(fields);
+    }
+
+    function hasRequiredAndAllowedFields(data, requiredFields, allowedFields) {
+      return data.keys().hasAll(requiredFields)
+        && data.keys().hasOnly(allowedFields);
+    }
+
+    function validUser(data) {
+      return hasRequiredAndAllowedFields(
+          data,
+          ['email', 'createdAt'],
+          ['email', 'nickname', 'createdAt']
+        )
+        && data.email is string
+        && (!('nickname' in data) || data.nickname is string)
+        && data.createdAt is timestamp;
+    }
+
+    function validStudyNote(data) {
+      return hasRequiredAndAllowedFields(data, [
+          'userId',
+          'title',
+          'originalText',
+          'summary',
+          'keywords',
+          'createdAt'
+        ], [
+          'userId',
+          'title',
+          'subject',
+          'originalText',
+          'summary',
+          'keywords',
+          'createdAt'
+        ])
+        && data.userId is string
+        && data.title is string
+        && (!('subject' in data) || data.subject is string)
+        && data.originalText is string
+        && data.summary is list
+        && data.keywords is list
+        && data.createdAt is timestamp;
+    }
+
+    function validQuiz(data) {
+      return hasExactFields(data, [
+          'noteId',
+          'userId',
+          'question',
+          'options',
+          'answerIndex',
+          'explanation',
+          'createdAt'
+        ])
+        && data.noteId is string
+        && data.userId is string
+        && data.question is string
+        && data.options is list
+        && data.options.size() == 4
+        && data.options[0] is string
+        && data.options[1] is string
+        && data.options[2] is string
+        && data.options[3] is string
+        && data.answerIndex is int
+        && data.answerIndex >= 0
+        && data.answerIndex <= 3
+        && data.explanation is string
+        && data.createdAt is timestamp;
+    }
+
+    function validQuizResult(data) {
+      return hasExactFields(data, [
+          'userId',
+          'noteId',
+          'totalCount',
+          'correctCount',
+          'score',
+          'createdAt'
+        ])
+        && data.userId is string
+        && data.noteId is string
+        && data.totalCount is int
+        && data.totalCount > 0
+        && data.correctCount is int
+        && data.correctCount >= 0
+        && data.correctCount <= data.totalCount
+        && data.score is int
+        && data.score >= 0
+        && data.score <= 100
+        && (2 * data.score - 1) * data.totalCount
+          <= 200 * data.correctCount
+        && 200 * data.correctCount
+          < (2 * data.score + 1) * data.totalCount
+        && data.createdAt is timestamp;
+    }
+
+    function validWrongAnswer(data) {
+      return hasExactFields(data, [
+          'userId',
+          'quizId',
+          'noteId',
+          'selectedIndex',
+          'correctIndex',
+          'question',
+          'options',
+          'explanation',
+          'createdAt'
+        ])
+        && data.userId is string
+        && data.quizId is string
+        && data.noteId is string
+        && data.selectedIndex is int
+        && data.selectedIndex >= 0
+        && data.selectedIndex <= 3
+        && data.correctIndex is int
+        && data.correctIndex >= 0
+        && data.correctIndex <= 3
+        && data.selectedIndex != data.correctIndex
+        && data.question is string
+        && data.options is list
+        && data.options.size() == 4
+        && data.options[0] is string
+        && data.options[1] is string
+        && data.options[2] is string
+        && data.options[3] is string
+        && data.explanation is string
+        && data.createdAt is timestamp;
+    }
+
+    function noteExists(noteId) {
+      let notePath = /databases/$(database)/documents/study_notes/$(noteId);
+      return exists(notePath);
+    }
+
+    function noteBelongsTo(noteId, userId) {
+      let notePath = /databases/$(database)/documents/study_notes/$(noteId);
+      return get(notePath).data.userId == userId;
+    }
+
+    function quizExists(quizId) {
+      let quizPath = /databases/$(database)/documents/quizzes/$(quizId);
+      return exists(quizPath);
+    }
+
+    function wrongAnswerMatchesQuiz(data) {
+      let quizPath = /databases/$(database)/documents/quizzes/$(data.quizId);
+      let quiz = get(quizPath).data;
+      return quiz.userId == data.userId
+        && quiz.noteId == data.noteId
+        && quiz.answerIndex == data.correctIndex
+        && quiz.question == data.question
+        && quiz.options == data.options
+        && quiz.explanation == data.explanation;
+    }
+
+    function keepsFields(fields) {
+      return !request.resource.data.diff(resource.data).affectedKeys().hasAny(fields);
+    }
+
+    function createdNow(data) {
+      return data.createdAt == request.time;
     }
 
     match /users/{userId} {
       allow create: if owns(userId)
+        && validUser(request.resource.data)
+        && createdNow(request.resource.data)
+        && request.auth.token.email is string
         && request.resource.data.email == request.auth.token.email;
-      allow read, delete: if owns(userId);
-      allow update: if owns(userId)
-        && request.resource.data.email == resource.data.email;
+      allow read, delete: if verifiedOwner(userId);
+      allow update: if verifiedOwner(userId)
+        && validUser(request.resource.data)
+        && request.resource.data.email == request.auth.token.email
+        && keepsFields(['email', 'createdAt']);
     }
 
     match /study_notes/{noteId} {
-      allow create: if owns(request.resource.data.userId);
-      allow read, delete: if owns(resource.data.userId);
-      allow update: if owns(resource.data.userId) && keepsOwner();
+      allow create: if verifiedOwner(request.resource.data.userId)
+        && validStudyNote(request.resource.data)
+        && createdNow(request.resource.data);
+      allow read, delete: if verifiedOwner(resource.data.userId);
+      allow update: if verifiedOwner(resource.data.userId)
+        && validStudyNote(request.resource.data)
+        && keepsFields(['userId', 'createdAt']);
     }
 
     match /quizzes/{quizId} {
-      allow create: if owns(request.resource.data.userId);
-      allow read, delete: if owns(resource.data.userId);
-      allow update: if owns(resource.data.userId) && keepsOwner();
+      allow create: if verifiedOwner(request.resource.data.userId)
+        && validQuiz(request.resource.data)
+        && createdNow(request.resource.data)
+        && noteExists(request.resource.data.noteId)
+        && noteBelongsTo(
+          request.resource.data.noteId,
+          request.resource.data.userId
+        );
+      allow read, delete: if verifiedOwner(resource.data.userId);
+      allow update: if verifiedOwner(resource.data.userId)
+        && validQuiz(request.resource.data)
+        && noteExists(request.resource.data.noteId)
+        && noteBelongsTo(
+          request.resource.data.noteId,
+          request.resource.data.userId
+        )
+        && keepsFields(['noteId', 'userId', 'createdAt']);
     }
 
     match /quiz_results/{resultId} {
-      allow create: if owns(request.resource.data.userId);
-      allow read, delete: if owns(resource.data.userId);
-      allow update: if owns(resource.data.userId) && keepsOwner();
+      allow create: if verifiedOwner(request.resource.data.userId)
+        && validQuizResult(request.resource.data)
+        && createdNow(request.resource.data)
+        && noteExists(request.resource.data.noteId)
+        && noteBelongsTo(
+          request.resource.data.noteId,
+          request.resource.data.userId
+        );
+      allow read, delete: if verifiedOwner(resource.data.userId);
+      allow update: if verifiedOwner(resource.data.userId)
+        && validQuizResult(request.resource.data)
+        && noteExists(request.resource.data.noteId)
+        && noteBelongsTo(
+          request.resource.data.noteId,
+          request.resource.data.userId
+        )
+        && keepsFields(['userId', 'noteId', 'createdAt']);
     }
 
     match /wrong_answers/{wrongId} {
-      allow create: if owns(request.resource.data.userId);
-      allow read, delete: if owns(resource.data.userId);
-      allow update: if owns(resource.data.userId) && keepsOwner();
+      allow create: if verifiedOwner(request.resource.data.userId)
+        && validWrongAnswer(request.resource.data)
+        && createdNow(request.resource.data)
+        && noteExists(request.resource.data.noteId)
+        && noteBelongsTo(
+          request.resource.data.noteId,
+          request.resource.data.userId
+        )
+        && quizExists(request.resource.data.quizId)
+        && wrongAnswerMatchesQuiz(request.resource.data);
+      allow read, delete: if verifiedOwner(resource.data.userId);
+      allow update: if verifiedOwner(resource.data.userId)
+        && validWrongAnswer(request.resource.data)
+        && noteExists(request.resource.data.noteId)
+        && noteBelongsTo(
+          request.resource.data.noteId,
+          request.resource.data.userId
+        )
+        && quizExists(request.resource.data.quizId)
+        && wrongAnswerMatchesQuiz(request.resource.data)
+        && keepsFields(['userId', 'quizId', 'noteId', 'createdAt']);
     }
   }
 }

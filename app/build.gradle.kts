@@ -10,9 +10,42 @@ val localProperties = Properties().apply {
     if (file.exists()) load(file.inputStream())
 }
 
+val teamDebugKeystore = rootProject.file("team-debug.keystore")
+val keystorePropertiesFile = rootProject.file("keystore.properties")
+val keystoreProperties = Properties().apply {
+    if (keystorePropertiesFile.exists()) load(keystorePropertiesFile.inputStream())
+}
+val teamDebugStorePassword = keystoreProperties.getProperty("storePassword")
+val teamDebugKeyAlias = keystoreProperties.getProperty("keyAlias")
+val teamDebugKeyPassword = keystoreProperties.getProperty("keyPassword")
+val hasTeamDebugFiles = teamDebugKeystore.exists() || keystorePropertiesFile.exists()
+val hasTeamDebugSigning = teamDebugKeystore.exists()
+        && keystorePropertiesFile.exists()
+        && !teamDebugStorePassword.isNullOrBlank()
+        && !teamDebugKeyAlias.isNullOrBlank()
+        && !teamDebugKeyPassword.isNullOrBlank()
+
+if (hasTeamDebugFiles && !hasTeamDebugSigning) {
+    throw GradleException(
+        "Team debug signing is incomplete. Add both team-debug.keystore and " +
+                "keystore.properties with storePassword, keyAlias, and keyPassword."
+    )
+}
+
 android {
     namespace = "com.example.studymate"
     compileSdk = 36
+
+    signingConfigs {
+        getByName("debug") {
+            if (hasTeamDebugSigning) {
+                storeFile = teamDebugKeystore
+                storePassword = teamDebugStorePassword
+                keyAlias = teamDebugKeyAlias
+                keyPassword = teamDebugKeyPassword
+            }
+        }
+    }
 
     defaultConfig {
         applicationId = "com.example.studymate"

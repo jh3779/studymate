@@ -44,9 +44,26 @@ docs/
 
 - Android Studio
 - Java 11
+- Node.js 20 이상
 - Android Emulator 또는 실제 Android 기기
 - Firebase 프로젝트 1개
 - 개발용 AI API Key, 앱 내부 하드코딩 금지
+
+## Firestore 보안 규칙 테스트
+
+프로젝트 루트에서 테스트 의존성을 설치한 뒤 Emulator 테스트를 실행합니다.
+
+```bash
+npm --prefix tests/firestore-rules ci
+npm run test:firestore-rules
+```
+
+테스트용 Firestore Emulator는 충돌을 피하기 위해 `127.0.0.1:8181`을 사용합니다.
+의존성 취약점은 다음 명령으로 확인합니다.
+
+```bash
+npm run audit:firestore-rules
+```
 
 ## 개발 일정 요약
 
