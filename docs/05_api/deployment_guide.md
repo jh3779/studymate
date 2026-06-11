@@ -83,6 +83,7 @@ Android Studio에서 **Build > Clean Project → Rebuild Project** 후 실행해
 | 정책 | 내용 |
 |---|---|
 | Firebase Auth 검증 | 모든 요청에 `Authorization: Bearer <Firebase ID Token>` 헤더 필수. 앱은 `AiService`에서 자동으로 첨부. |
+| 이메일 인증 검증 | ID Token의 `email_verified`가 `true`인 사용자만 AI 엔드포인트 호출 가능. |
 | 입력 길이 제한 | `text` 필드 최대 5,000자. 초과 시 400 응답. |
 | Secret Manager | `OPENAI_API_KEY`는 코드에 하드코딩하지 않고 Secret Manager로 관리. |
 

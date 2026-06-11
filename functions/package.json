@@ -2,6 +2,7 @@
   "name": "studymate-functions",
   "description": "StudyMate Firebase Cloud Functions",
   "scripts": {
+    "test": "node --test authMiddleware.test.js",
     "serve": "firebase emulators:start --only functions",
     "deploy": "firebase deploy --only functions",
     "logs": "firebase functions:log"
@@ -15,6 +16,9 @@
     "firebase-admin": "^12.0.0",
     "firebase-functions": "^5.0.0",
     "openai": "^4.0.0"
+  },
+  "overrides": {
+    "uuid": "11.1.1"
   },
   "private": true
 }

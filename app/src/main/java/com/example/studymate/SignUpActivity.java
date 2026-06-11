@@ -102,20 +102,24 @@ public class SignUpActivity extends BaseActivity {
             public void onSuccess() {
                 setLoading(false);
                 showShortToast("인증 메일을 보냈습니다.");
-                openEmailVerification(email);
+                openEmailVerification(email, true);
             }
 
             @Override
             public void onFailure(String errorMessage) {
                 setLoading(false);
                 showShortToast("인증 메일 발송에 실패했습니다. 다시 시도해주세요.");
-                openEmailVerification(email);
+                openEmailVerification(email, false);
             }
         });
     }
 
-    private void openEmailVerification(String email) {
-        startActivity(EmailVerificationActivity.createIntent(this, email));
+    private void openEmailVerification(String email, boolean startResendCooldown) {
+        startActivity(EmailVerificationActivity.createIntent(
+                this,
+                email,
+                startResendCooldown
+        ));
         finish();
     }
 

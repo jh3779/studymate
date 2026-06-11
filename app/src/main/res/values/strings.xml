@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">StudyMate</string>
+    <string name="email_verification_resend_countdown">재전송 (%1$d초)</string>
 </resources>
