@@ -237,7 +237,12 @@ service cloud.firestore {
           request.resource.data.noteId,
           request.resource.data.userId
         );
-      allow read, delete: if verifiedOwner(resource.data.userId);
+      allow get: if verified()
+        && (
+          !exists(/databases/$(database)/documents/quiz_results/$(resultId))
+          || owns(resource.data.userId)
+        );
+      allow list, delete: if verifiedOwner(resource.data.userId);
       allow update: if verifiedOwner(resource.data.userId)
         && validQuizResult(request.resource.data)
         && noteExists(request.resource.data.noteId)
@@ -259,7 +264,12 @@ service cloud.firestore {
         )
         && quizExists(request.resource.data.quizId)
         && wrongAnswerMatchesQuiz(request.resource.data);
-      allow read, delete: if verifiedOwner(resource.data.userId);
+      allow get: if verified()
+        && (
+          !exists(/databases/$(database)/documents/wrong_answers/$(wrongId))
+          || owns(resource.data.userId)
+        );
+      allow list, delete: if verifiedOwner(resource.data.userId);
       allow update: if verifiedOwner(resource.data.userId)
         && validWrongAnswer(request.resource.data)
         && noteExists(request.resource.data.noteId)

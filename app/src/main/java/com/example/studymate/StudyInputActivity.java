@@ -46,6 +46,8 @@ public class StudyInputActivity extends BaseActivity {
     private final ExecutorService importExecutor = Executors.newSingleThreadExecutor();
     private ActivityResultLauncher<String[]> pdfPickerLauncher;
     private ActivityResultLauncher<String[]> imagePickerLauncher;
+    private boolean loading;
+    private boolean importing;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -110,9 +112,7 @@ public class StudyInputActivity extends BaseActivity {
         }
 
         errorText.setVisibility(View.GONE);
-        loadingBox.setVisibility(View.VISIBLE);
-        generateButton.setEnabled(false);
-        generateButton.setText("AI 요약 생성 중...");
+        setLoading(true);
 
         aiService.generateSummary(content, new AiService.SummaryCallback() {
             @Override
@@ -179,15 +179,13 @@ public class StudyInputActivity extends BaseActivity {
     }
 
     private void setLoading(boolean loading) {
+        this.loading = loading;
         loadingBox.setVisibility(loading ? View.VISIBLE : View.GONE);
         if (!loading) {
             loadingBox.setText("⏳ AI 요약 생성 중...\n잠시만 기다려주세요");
         }
-        generateButton.setEnabled(!loading);
         generateButton.setText(loading ? "AI 요약 생성 중..." : "AI 요약 생성");
-        titleInput.setEnabled(!loading);
-        subjectInput.setEnabled(!loading);
-        contentInput.setEnabled(!loading);
+        updateInputEnabledState();
     }
 
     private void showError(String message) {
@@ -253,15 +251,21 @@ public class StudyInputActivity extends BaseActivity {
     }
 
     private void setImporting(boolean importing, String message) {
-        titleInput.setEnabled(!importing);
-        subjectInput.setEnabled(!importing);
-        contentInput.setEnabled(!importing);
-        generateButton.setEnabled(!importing);
-        importPdfButton.setEnabled(!importing);
-        importImageButton.setEnabled(!importing);
+        this.importing = importing;
+        updateInputEnabledState();
         if (importing) {
             showImportStatus(message);
         }
+    }
+
+    private void updateInputEnabledState() {
+        boolean enabled = !loading && !importing;
+        titleInput.setEnabled(enabled);
+        subjectInput.setEnabled(enabled);
+        contentInput.setEnabled(enabled);
+        generateButton.setEnabled(enabled);
+        importPdfButton.setEnabled(enabled);
+        importImageButton.setEnabled(enabled);
     }
 
     private void showImportStatus(String message) {

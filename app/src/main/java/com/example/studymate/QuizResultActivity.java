@@ -2,9 +2,9 @@ package com.example.studymate;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.widget.Button;
 import android.widget.TextView;
+import androidx.lifecycle.ViewModelProvider;
 import com.example.studymate.model.QuizModel;
 import com.example.studymate.model.QuizResultModel;
 import com.example.studymate.model.WrongAnswerModel;
@@ -12,17 +12,16 @@ import com.example.studymate.service.FirestoreService;
 import com.google.firebase.auth.FirebaseAuth;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 public class QuizResultActivity extends BaseActivity {
-    private static final String STATE_OUTCOME_SAVE_STARTED = "outcomeSaveStarted";
-
     private ArrayList<Integer> userAnswers = new ArrayList<>();
     private ArrayList<QuizModel> quizList = new ArrayList<>();
     private FirebaseAuth auth;
     private final FirestoreService firestoreService = new FirestoreService();
     private String noteId = "";
+    private String attemptId = "";
     private TextView resultSaveStatusText;
-    private boolean outcomeSaveStarted = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -30,15 +29,17 @@ public class QuizResultActivity extends BaseActivity {
         setContentView(R.layout.activity_quiz_result);
 
         auth = FirebaseAuth.getInstance();
-        if (savedInstanceState != null) {
-            outcomeSaveStarted = savedInstanceState.getBoolean(STATE_OUTCOME_SAVE_STARTED, false);
-        }
 
         int correctCount = getIntent().getIntExtra("correctCount", 0);
         int totalCount = getIntent().getIntExtra("totalCount", 0);
 
         // SummaryResultActivity -> QuizActivity -> 여기로 온 실제 study_notes/{noteId} 문서 ID 수신
         noteId = getIntent().getStringExtra("noteId");
+        attemptId = getIntent().getStringExtra("attemptId");
+        if (attemptId == null || attemptId.trim().isEmpty()) {
+            attemptId = UUID.randomUUID().toString();
+            getIntent().putExtra("attemptId", attemptId);
+        }
 
         ArrayList<Integer> receivedAnswers = getIntent().getIntegerArrayListExtra("userAnswers");
         if (receivedAnswers != null) {
@@ -85,10 +86,10 @@ public class QuizResultActivity extends BaseActivity {
             }
         }
 
-        if (!outcomeSaveStarted) {
-            outcomeSaveStarted = true;
-            saveOutcomeToFirestore(totalCount, correctCount, score, wrongCount);
-        }
+        QuizResultViewModel viewModel =
+                new ViewModelProvider(this).get(QuizResultViewModel.class);
+        viewModel.getSaveStatus().observe(this, this::updateSaveStatus);
+        saveOutcomeToFirestore(viewModel, totalCount, correctCount, score, wrongCount);
 
         if (showWrongButton != null) {
             showWrongButton.setOnClickListener(v -> {
@@ -110,13 +111,8 @@ public class QuizResultActivity extends BaseActivity {
         bindClick(R.id.resultHomeButton, v -> goToAndClear(HomeActivity.class));
     }
 
-    @Override
-    protected void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-        outState.putBoolean(STATE_OUTCOME_SAVE_STARTED, outcomeSaveStarted);
-    }
-
     private void saveOutcomeToFirestore(
+            QuizResultViewModel viewModel,
             int totalCount,
             int correctCount,
             int score,
@@ -129,7 +125,7 @@ public class QuizResultActivity extends BaseActivity {
 
         String userId = auth.getCurrentUser().getUid();
         QuizResultModel result = new QuizResultModel(
-                null,
+                attemptId,
                 userId,
                 noteId,
                 totalCount,
@@ -139,22 +135,7 @@ public class QuizResultActivity extends BaseActivity {
         );
 
         List<WrongAnswerModel> wrongAnswers = buildWrongAnswers(userId);
-        firestoreService.saveQuizOutcome(result, wrongAnswers, new FirestoreService.SaveCallback() {
-            @Override
-            public void onSuccess(String documentId) {
-                if (wrongCount == 0) {
-                    updateSaveStatus("퀴즈 결과를 저장했습니다.");
-                } else {
-                    updateSaveStatus("퀴즈 결과와 오답노트를 저장했습니다.");
-                }
-            }
-
-            @Override
-            public void onFailure(String errorMessage) {
-                Log.e("FirestoreRulesGuard", "퀴즈 결과/오답 batch 저장 실패: " + errorMessage);
-                updateSaveStatus("저장에 실패했습니다. 잠시 후 홈에서 기록을 확인해주세요.");
-            }
-        });
+        viewModel.saveOutcome(firestoreService, result, wrongAnswers, wrongCount);
     }
 
     private List<WrongAnswerModel> buildWrongAnswers(String userId) {
@@ -165,7 +146,6 @@ public class QuizResultActivity extends BaseActivity {
                 int userSelected = userAnswers.get(i);
                 if (userSelected != quiz.getAnswerIndex()) {
                     if (quiz.getId() == null || quiz.getId().trim().isEmpty()) {
-                        Log.e("FirestoreRulesGuard", "quizId 누락으로 오답 저장 제외: index=" + i);
                         continue;
                     }
                     wrongAnswers.add(new WrongAnswerModel(

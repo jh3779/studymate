@@ -93,7 +93,7 @@
                 android:textStyle="bold" />
 
             <TextView
-                android:id="@+id/emptyRecentNotesText"
+                android:id="@+id/recentNotesTitle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="28dp"
@@ -103,6 +103,7 @@
                 android:textStyle="bold" />
 
             <TextView
+                android:id="@+id/emptyRecentNotesText"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"

@@ -217,13 +217,16 @@ public class FirestoreService {
             List<WrongAnswerModel> wrongAnswers,
             SaveCallback callback
     ) {
-        if (result == null || isBlank(result.getUserId()) || isBlank(result.getNoteId())) {
+        if (result == null
+                || isBlank(result.getId())
+                || isBlank(result.getUserId())
+                || isBlank(result.getNoteId())) {
             callback.onFailure("퀴즈 결과 정보가 올바르지 않습니다.");
             return;
         }
 
         DocumentReference resultDocument = firestore.collection(QUIZ_RESULTS)
-                .document(result.getNoteId());
+                .document(result.getId());
         result.setId(resultDocument.getId());
 
         List<WrongAnswerModel> safeWrongAnswers = wrongAnswers == null
@@ -239,7 +242,7 @@ public class FirestoreService {
                 return;
             }
 
-            String documentId = wrongAnswer.getNoteId() + "_" + wrongAnswer.getQuizId();
+            String documentId = resultDocument.getId() + "_" + wrongAnswer.getQuizId();
             DocumentReference wrongDocument =
                     firestore.collection(WRONG_ANSWERS).document(documentId);
             wrongAnswer.setId(documentId);

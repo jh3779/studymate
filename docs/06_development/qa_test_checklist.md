@@ -21,14 +21,15 @@ git pull --ff-only origin main
 | AUTO-002 | Android Lint | `JAVA_HOME=/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home ANDROID_HOME=/Users/jihun/Library/Android/sdk ./gradlew --no-daemon lintDebug` | `BUILD SUCCESSFUL` | 통과 |
 | AUTO-003 | Android 단위 테스트 | `JAVA_HOME=/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home ANDROID_HOME=/Users/jihun/Library/Android/sdk ./gradlew --no-daemon testDebugUnitTest` | `BUILD SUCCESSFUL` | 통과 |
 | AUTO-004 | Firestore 보안 규칙 테스트 | `npm --prefix tests/firestore-rules ci` 후 `npm run test:firestore-rules` | 전체 테스트 통과 | 통과 |
-| AUTO-005 | Firestore rules 의존성 감사 | `npm run audit:firestore-rules` | 취약점 없음 또는 허용 기준 이하 | 미실행 |
+| AUTO-005 | Firestore rules 의존성 감사 | `npm run audit:firestore-rules` | 취약점 없음 또는 허용 기준 이하 | 통과 |
 
 최근 확인 결과:
 
 - `assembleDebug`: 통과
 - `lintDebug`: 통과
 - `testDebugUnitTest`: 통과
-- Firestore rules: `10 pass / 0 fail`
+- Firestore rules: `11 pass / 0 fail`
+- Firestore rules 의존성 감사: `0 vulnerabilities`
 
 자동 검증은 코드와 보안 규칙의 최소 안정성을 확인한다. Firebase Auth, Functions 배포 URL, 실제 기기 네트워크, 이메일 인증 상태가 필요한 항목은 아래 수동 QA에서 별도로 최종 확인한다.
 
