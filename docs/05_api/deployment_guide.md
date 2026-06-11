@@ -76,6 +76,57 @@ Android Studio에서 **Build > Clean Project → Rebuild Project** 후 실행해
 
 ---
 
+## 실제 Android 기기에서 Firebase 로그인 확인
+
+이메일/비밀번호 로그인은 로컬 서버를 사용하지 않고 Firebase Auth에 직접 연결된다.
+에뮬레이터에서는 되지만 다른 기기에서 실패하면 다음 항목을 확인한다.
+
+1. Firebase Console > Authentication > Sign-in method에서 `Email/Password`가 활성화되어 있는지 확인한다.
+2. Firebase Console > Project settings > Your apps의 Android 패키지명이
+   `com.example.studymate`인지 확인한다.
+3. 앱의 `app/google-services.json`이 같은 Firebase 프로젝트
+   (`studymate-f03e7`)에서 내려받은 최신 파일인지 확인한다.
+4. Google Cloud Console에서 API 키에 Android 앱 제한을 설정했다면 패키지명과
+   현재 APK를 서명한 인증서의 SHA-1을 모두 등록한다.
+5. 다른 PC에서 debug APK를 빌드하면 debug keystore가 달라지므로 그 PC의 SHA-1도
+   등록하거나 동일한 서명 키로 빌드한다.
+
+현재 debug 인증서의 SHA 값은 다음 명령으로 확인할 수 있다.
+
+```powershell
+.\gradlew.bat signingReport
+```
+
+실패 원문과 Firebase 오류 코드는 Android Studio Logcat에서 `AuthService`로
+필터링해 확인한다.
+
+### 팀 공용 debug 서명
+
+팀원이 동일한 SHA 인증서로 debug APK를 만들려면 공용 `team-debug.keystore`를
+프로젝트 루트에 둔다. 키 파일과 `keystore.properties`는 Git에 커밋하지 않고
+팀 내부의 안전한 채널로 공유한다.
+
+새 PC에서는 다음 순서로 설정한다.
+
+1. 전달받은 `team-debug.keystore`를 프로젝트 루트에 둔다.
+2. 전달받은 `keystore.properties`를 프로젝트 루트에 둔다.
+
+```properties
+storePassword=<팀 공용 키 저장소 비밀번호>
+keyAlias=androiddebugkey
+keyPassword=<팀 공용 키 비밀번호>
+```
+
+3. Android Studio에서 평소처럼 Run 또는 Build한다.
+4. `.\gradlew.bat signingReport`에서 팀 공용 SHA-1이 출력되는지 확인한다.
+
+두 파일이 모두 없으면 해당 PC의 기본 debug keystore를 사용한다. 한 파일만
+있거나 필수 설정값이 누락되면 다른 SHA로 빌드되는 실수를 막기 위해 빌드가
+실패한다.
+운영 release keystore는 공용 debug 키와 반드시 분리한다.
+
+---
+
 ## 4. 엔드포인트 보호 정책
 
 `functions/index.js`에 적용된 보호 정책:
@@ -83,6 +134,7 @@ Android Studio에서 **Build > Clean Project → Rebuild Project** 후 실행해
 | 정책 | 내용 |
 |---|---|
 | Firebase Auth 검증 | 모든 요청에 `Authorization: Bearer <Firebase ID Token>` 헤더 필수. 앱은 `AiService`에서 자동으로 첨부. |
+| 이메일 인증 검증 | ID Token의 `email_verified`가 `true`인 사용자만 AI 엔드포인트 호출 가능. |
 | 입력 길이 제한 | `text` 필드 최대 5,000자. 초과 시 400 응답. |
 | Secret Manager | `OPENAI_API_KEY`는 코드에 하드코딩하지 않고 Secret Manager로 관리. |
 

@@ -44,23 +44,9 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="28dp"
-            android:text="인증코드"
+            android:text="메일에서 인증 링크를 누른 뒤 아래 버튼을 눌러주세요."
             android:textColor="@color/study_text_muted"
-            android:textSize="16sp"
-            android:textStyle="bold" />
-
-        <EditText
-            android:id="@+id/verificationCodeInput"
-            android:layout_width="match_parent"
-            android:layout_height="@dimen/field_height"
-            android:layout_marginTop="8dp"
-            android:autofillHints="oneTimeCode"
-            android:background="@drawable/bg_input"
-            android:hint="인증코드 입력"
-            android:inputType="textVisiblePassword|textNoSuggestions"
-            android:singleLine="true"
-            android:textColor="@color/study_text"
-            android:textColorHint="@color/study_text_muted" />
+            android:textSize="16sp" />
 
         <TextView
             android:id="@+id/verificationErrorText"

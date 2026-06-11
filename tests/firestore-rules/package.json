@@ -1,0 +1,21 @@
+{
+  "name": "studymate-firestore-rules-tests",
+  "private": true,
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "npm run test:emulator",
+    "test:unit": "node --test firestore.rules.test.js",
+    "test:emulator": "firebase emulators:exec --config ../../firebase.json --project studymate-rules-test --only firestore \"node --test firestore.rules.test.js\"",
+    "audit": "npm audit --audit-level=moderate"
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "5.0.1",
+    "firebase": "12.14.0",
+    "firebase-tools": "15.19.1"
+  },
+  "overrides": {
+    "uuid": "11.1.1"
+  }
+}

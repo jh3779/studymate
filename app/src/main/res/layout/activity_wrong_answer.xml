@@ -62,7 +62,7 @@
                 android:layout_marginTop="8dp"
                 android:background="@drawable/bg_card"
                 android:padding="@dimen/card_padding"
-                android:text="✕ 내 답: 데이터 로딩 중"
+                android:text="내 답: 데이터 로딩 중"
                 android:textColor="#D32F2F"
                 android:textSize="16sp" />
 
@@ -73,7 +73,7 @@
                 android:layout_marginTop="8dp"
                 android:background="@drawable/bg_card"
                 android:padding="@dimen/card_padding"
-                android:text="✓ 정답: 데이터 로딩 중"
+                android:text="정답: 데이터 로딩 중"
                 android:textColor="#388E3C"
                 android:textSize="16sp" />
 
@@ -84,7 +84,7 @@
                 android:layout_marginTop="8dp"
                 android:background="@drawable/bg_card"
                 android:padding="@dimen/card_padding"
-                android:text="💡 해설: 데이터 로딩 중"
+                android:text="해설: 데이터 로딩 중"
                 android:textColor="@color/study_text_muted"
                 android:textSize="15sp"
                 android:lineSpacingExtra="6dp" />
