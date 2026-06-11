@@ -152,7 +152,7 @@ public class QuizResultActivity extends BaseActivity {
             @Override
             public void onFailure(String errorMessage) {
                 Log.e("FirestoreRulesGuard", "퀴즈 결과/오답 batch 저장 실패: " + errorMessage);
-                updateSaveStatus("저장에 실패했거나 이미 저장된 결과입니다.");
+                updateSaveStatus("저장에 실패했습니다. 잠시 후 홈에서 기록을 확인해주세요.");
             }
         });
     }

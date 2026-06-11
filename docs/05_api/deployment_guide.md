@@ -83,6 +83,10 @@ ai.base.url=https://api-<hash>-uc.a.run.app
 
 Android Studio에서 **Build > Clean Project → Rebuild Project** 후 실행해야 `BuildConfig.AI_BASE_URL`에 값이 반영된다.
 
+> `ai.base.url`이 비어 있으면 앱은 AI 요청을 보내지 않고
+> "AI 서버 주소가 설정되지 않았습니다" 오류를 표시한다. 발표 또는 실기기 QA 전에는
+> 반드시 배포 URL 입력과 리빌드를 먼저 완료한다.
+
 ---
 
 ## 실제 Android 기기에서 Firebase 로그인 확인

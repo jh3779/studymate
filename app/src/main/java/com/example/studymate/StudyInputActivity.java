@@ -205,7 +205,7 @@ public class StudyInputActivity extends BaseActivity {
             } catch (Exception e) {
                 runOnUiThread(() -> {
                     setImporting(false, "");
-                    showError("⚠ PDF 텍스트 추출에 실패했습니다. 텍스트가 포함된 PDF인지 확인해주세요.");
+                    showError("⚠ PDF 텍스트 추출에 실패했습니다. 텍스트 PDF인지 확인하거나 스캔 자료는 이미지 OCR로 가져와주세요.");
                 });
             }
         });
@@ -238,7 +238,7 @@ public class StudyInputActivity extends BaseActivity {
         setImporting(false, "");
         String normalized = text == null ? "" : text.trim();
         if (normalized.length() < 30) {
-            showError("⚠ " + sourceLabel + "에서 30자 이상의 학습 내용을 찾지 못했습니다.");
+            showError("⚠ " + sourceLabel + "에서 30자 이상의 학습 내용을 찾지 못했습니다. 스캔 PDF는 이미지로 변환한 뒤 이미지 OCR을 사용해주세요.");
             return;
         }
         if (normalized.length() > 5000) {
