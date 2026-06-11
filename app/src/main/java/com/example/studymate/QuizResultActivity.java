@@ -2,6 +2,7 @@ package com.example.studymate;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.Button;
 import android.widget.TextView;
 import com.example.studymate.model.QuizModel;
@@ -29,6 +30,8 @@ public class QuizResultActivity extends BaseActivity {
 
         int correctCount = getIntent().getIntExtra("correctCount", 0);
         int totalCount = getIntent().getIntExtra("totalCount", 0);
+
+        // SummaryResultActivity -> QuizActivity -> 여기로 온 실제 study_notes/{noteId} 문서 ID 수신
         noteId = getIntent().getStringExtra("noteId");
 
         ArrayList<Integer> receivedAnswers = getIntent().getIntegerArrayListExtra("userAnswers");
@@ -41,8 +44,7 @@ public class QuizResultActivity extends BaseActivity {
             quizList = receivedQuizList;
         }
 
-        // 지훈이 피드백 반영: 중복 선언 완전 제거 및 보정 수식 반영 완료
-        int wrongCount = Math.max(0, totalCount - correctCount);
+        int wrongCount = totalCount - correctCount;
         int score = totalCount == 0 ? 0 : Math.round((correctCount * 100f) / totalCount);
 
         TextView scoreCircle = findViewById(R.id.scoreCircle);
@@ -61,10 +63,11 @@ public class QuizResultActivity extends BaseActivity {
             }
         }
 
+        // 오답 상세 버튼 비활성화 및 가드 처리
         if (showWrongButton != null) {
             if (wrongCount == 0) {
                 showWrongButton.setEnabled(false);
-                showWrongButton.setAlpha(0.5f); // 불투명하게 처리하여 클릭 불가 상태 시각화
+                showWrongButton.setAlpha(0.5f);
                 showWrongButton.setText("틀린 문제가 없습니다");
             } else {
                 showWrongButton.setEnabled(true);
@@ -73,23 +76,19 @@ public class QuizResultActivity extends BaseActivity {
             }
         }
 
+        // 안전한 Firestore 오답 업로드 파이프라인 실행
         uploadWrongAnswersToFirestore();
 
         if (showWrongButton != null) {
             showWrongButton.setOnClickListener(v -> {
-                // 1. 오답 개수가 0개이면 화면 이동을 원천 봉쇄하고 메시지 처리
                 if (wrongCount == 0) {
                     showShortToast("틀린 문제가 없습니다.");
                     return;
                 }
-
-                // 2. 전달 데이터 유효성 예외 처리
                 if (userAnswers == null || userAnswers.isEmpty()) {
                     showShortToast("전달된 유저 답안 데이터가 없습니다.");
                     return;
                 }
-
-                // 3. 검증 통과 시에만 오답 화면으로 진입
                 Intent intent = new Intent(this, WrongAnswerActivity.class);
                 intent.putIntegerArrayListExtra("userAnswers", userAnswers);
                 intent.putExtra("quizListSerializable", quizList);
@@ -100,11 +99,22 @@ public class QuizResultActivity extends BaseActivity {
         bindClick(R.id.resultHomeButton, v -> goToAndClear(HomeActivity.class));
     }
 
+    /**
+     *
+     * 1. 메서드명을 지훈이가 요구한 uploadWrongAnswersToFirestore()로 명사화 변경
+     * 2. note_default_fallback 제거 및 비어있을 시 즉시 return 차단 보완
+     * 3. validQuiz() 및 wrongAnswerMatchesQuiz() 규칙 완벽 동기화
+     */
     private void uploadWrongAnswersToFirestore() {
         if (auth.getCurrentUser() == null || quizList.isEmpty() || userAnswers.isEmpty()) return;
-        if (noteId == null || noteId.isEmpty()) {
-            noteId = "note_default_fallback";
+
+        // note_default_fallback을 완전히 제거하고, 유효한 실제 문서 ID가 없으면 즉시 중단
+        if (noteId == null || noteId.trim().isEmpty()) {
+            Log.e("FirestoreRulesGuard", "Error: 실제 study_notes 문서 ID가 누락되어 오답 저장을 중단합니다.");
+            showShortToast("노트 정보가 올바르지 않아 오답노트가 서버에 기록되지 않았습니다.");
+            return;
         }
+
         String currentUserId = auth.getCurrentUser().getUid();
 
         for (int i = 0; i < quizList.size(); i++) {
@@ -112,10 +122,14 @@ public class QuizResultActivity extends BaseActivity {
                 QuizModel quiz = quizList.get(i);
                 final int userSelected = userAnswers.get(i);
 
+                // 틀린 문제만 필터링하여 업로드
                 if (userSelected != quiz.getAnswerIndex()) {
                     if (quiz.getId() == null || quiz.getId().startsWith("ai_gen_")) {
-                        // 1단계: 실제 quizzes 컬렉션 문서가 없다면 선제 빌드 업로드 수행 (quizExists 조건 만족용)
+
+                        //  validQuiz() 규칙 100% 매칭 스키마 (7개 필드 정확히 일치)
                         Map<String, Object> quizSchema = new HashMap<>();
+                        quizSchema.put("noteId", noteId);                          // verifiedOwner 및 noteExists 조건 충족
+                        quizSchema.put("userId", currentUserId);                    // noteBelongsTo 조건 충족
                         quizSchema.put("question", quiz.getQuestion());
                         quizSchema.put("options", quiz.getOptions());
                         quizSchema.put("answerIndex", quiz.getAnswerIndex());
@@ -127,32 +141,41 @@ public class QuizResultActivity extends BaseActivity {
                                 .addOnSuccessListener(quizDocRef -> {
                                     String realQuizId = quizDocRef.getId();
                                     quiz.setId(realQuizId);
-                                    // 2단계: 실존하는 실제 주소(realQuizId, noteId)들로 wrong_answers 최종 적재 실행
+
+                                    // 1단계 성공 시, 생성된 정식 quizId를 결합하여 2단계 wrong_answers 저장 실행
                                     executeWrongAnswerInsert(currentUserId, realQuizId, quiz, userSelected);
                                 })
-                                .addOnFailureListener(Throwable::printStackTrace);
+                                .addOnFailureListener(e -> {
+                                    Log.e("FirestoreRulesGuard", "1단계 quizzes 선행 생성 실패: " + e.getMessage());
+                                    showShortToast("보안 권한 거부로 인해 오답 퀴즈 생성에 실패했습니다.");
+                                });
                     } else {
-                        // 이미 실존하는 퀴즈 아이디가 주입되어 있다면 다이렉트 규칙 통과 적재
+                        // 원본 퀴즈 ID가 이미 존재하는 경우 바로 2단계 저장
                         executeWrongAnswerInsert(currentUserId, quiz.getId(), quiz, userSelected);
                     }
                 }
             }
         }
     }
-private void executeWrongAnswerInsert(String userId, String actualQuizId, QuizModel quiz, int userSelected) {
-    Map<String, Object> wrongAnswerData = new HashMap<>();
-    wrongAnswerData.put("userId", userId);
-    wrongAnswerData.put("quizId", actualQuizId);     // [규칙 충족] 실존하는 실제 quizId 매핑
-    wrongAnswerData.put("noteId", noteId);           // [규칙 충족] 실존하는 실제 noteId 연동 완료
-    wrongAnswerData.put("question", quiz.getQuestion());
-    wrongAnswerData.put("options", quiz.getOptions());
-    wrongAnswerData.put("selectedIndex", userSelected);
-    wrongAnswerData.put("correctIndex", quiz.getAnswerIndex());
-    wrongAnswerData.put("explanation", quiz.getExplanation());
-    wrongAnswerData.put("createdAt", FieldValue.serverTimestamp());
 
-    db.collection("wrong_answers")
-            .add(wrongAnswerData)
-            .addOnFailureListener(Throwable::printStackTrace);
-}
+    /**
+     * wrongAnswerMatchesQuiz() 규칙 매칭
+     * quizzes 문서에 들어간 원본 데이터와 한 자의 텍스트 오차도 없이 완벽하게 정합성을 맞춤
+     */
+    private void executeWrongAnswerInsert(String userId, String actualQuizId, QuizModel quiz, int userSelected) {
+        Map<String, Object> wrongAnswerData = new HashMap<>();
+        wrongAnswerData.put("userId", userId);
+        wrongAnswerData.put("quizId", actualQuizId);
+        wrongAnswerData.put("noteId", noteId);
+        wrongAnswerData.put("question", quiz.getQuestion());
+        wrongAnswerData.put("options", quiz.getOptions());
+        wrongAnswerData.put("selectedIndex", userSelected);
+        wrongAnswerData.put("correctIndex", quiz.getAnswerIndex()); // rules 검증용 answerIndex 매핑 동기화
+        wrongAnswerData.put("explanation", quiz.getExplanation());
+        wrongAnswerData.put("createdAt", FieldValue.serverTimestamp());
+
+        db.collection("wrong_answers")
+                .add(wrongAnswerData)
+                .addOnFailureListener(e -> Log.e("FirestoreRulesGuard", "2단계 wrong_answers 최종 적재 실패 (rules 정합성 오류 확인 필요): " + e.getMessage()));
+    }
 }
