@@ -4,7 +4,11 @@ import android.os.Bundle;
 import android.widget.Button;
 import android.widget.TextView;
 import com.example.studymate.model.QuizModel;
+import com.example.studymate.model.WrongAnswerModel;
+import com.example.studymate.service.AuthService;
+import com.example.studymate.service.FirestoreService;
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  *  원본 AI 생성 퀴즈 기반 오답노트 동적 매핑 핸들러
@@ -13,9 +17,14 @@ public class WrongAnswerActivity extends BaseActivity {
 
     // 로컬 하드코딩 배열 완전 파괴 ➡️ 동적 인텐트 유동형 리스트로 전환
     private ArrayList<QuizModel> quizList = new ArrayList<>();
+    private ArrayList<WrongAnswerModel> savedWrongAnswers = new ArrayList<>();
     private ArrayList<Integer> wrongIndices = new ArrayList<>();
     private ArrayList<Integer> userAnswers = new ArrayList<>();
     private int currentWrongIndex = 0;
+    private boolean showingSavedWrongAnswers = false;
+
+    private final AuthService authService = new AuthService();
+    private final FirestoreService firestoreService = new FirestoreService();
 
     private TextView tvWrongProgress;
     private TextView tvWrongQuestion;
@@ -54,7 +63,11 @@ public class WrongAnswerActivity extends BaseActivity {
             }
         }
 
-        displayWrongAnswer();
+        if (userAnswers != null && !userAnswers.isEmpty() && !quizList.isEmpty()) {
+            displayWrongAnswer();
+        } else {
+            loadSavedWrongAnswers();
+        }
 
         bindClick(R.id.backResult, v -> finish());
         bindClick(R.id.wrongHomeTab, v -> goToAndClear(HomeActivity.class));
@@ -62,6 +75,20 @@ public class WrongAnswerActivity extends BaseActivity {
 
         if (retryQuizButton != null) {
             retryQuizButton.setOnClickListener(v -> {
+                if (showingSavedWrongAnswers) {
+                    if (savedWrongAnswers.isEmpty()) {
+                        finish();
+                        return;
+                    }
+                    if (currentWrongIndex < savedWrongAnswers.size() - 1) {
+                        currentWrongIndex++;
+                        displaySavedWrongAnswer();
+                    } else {
+                        showShortToast("모든 오답 확인을 완료했습니다.");
+                        finish();
+                    }
+                    return;
+                }
                 if (wrongIndices.isEmpty()) {
                     finish();
                     return;
@@ -70,12 +97,34 @@ public class WrongAnswerActivity extends BaseActivity {
                     currentWrongIndex++;
                     displayWrongAnswer();
                 } else {
-                    showShortToast("모든 오답 확인 완료! 퀴즈 화면으로 돌아갑니다.");
-                    goTo(QuizActivity.class);
+                    showShortToast("모든 오답 확인을 완료했습니다.");
                     finish();
                 }
             });
         }
+    }
+
+    private void loadSavedWrongAnswers() {
+        String userId = authService.getCurrentUserId();
+        if (userId == null) {
+            displayWrongAnswer();
+            return;
+        }
+
+        firestoreService.getWrongAnswers(userId, new FirestoreService.ListCallback<WrongAnswerModel>() {
+            @Override
+            public void onSuccess(List<WrongAnswerModel> items) {
+                savedWrongAnswers = new ArrayList<>(items);
+                showingSavedWrongAnswers = true;
+                displaySavedWrongAnswer();
+            }
+
+            @Override
+            public void onFailure(String errorMessage) {
+                showShortToast(errorMessage);
+                displayWrongAnswer();
+            }
+        });
     }
 
     /**
@@ -120,5 +169,53 @@ public class WrongAnswerActivity extends BaseActivity {
         if (tvExplanation != null) {
             tvExplanation.setText("💡 해설: " + currentQuiz.getExplanation());
         }
+
+        if (retryQuizButton != null) {
+            retryQuizButton.setText(currentWrongIndex < wrongIndices.size() - 1
+                    ? "다음 오답 보기"
+                    : "돌아가기");
+        }
+    }
+
+    private void displaySavedWrongAnswer() {
+        if (savedWrongAnswers.isEmpty()) {
+            if (tvWrongProgress != null) tvWrongProgress.setText("오답 0/0");
+            if (tvWrongQuestion != null) tvWrongQuestion.setText("저장된 오답이 없습니다.");
+            if (tvMyAnswer != null) tvMyAnswer.setText("");
+            if (tvRealAnswer != null) tvRealAnswer.setText("");
+            if (tvExplanation != null) tvExplanation.setText("");
+            if (retryQuizButton != null) retryQuizButton.setText("돌아가기");
+            return;
+        }
+
+        WrongAnswerModel current = savedWrongAnswers.get(currentWrongIndex);
+        if (tvWrongProgress != null) {
+            tvWrongProgress.setText("오답 " + (currentWrongIndex + 1) + "/" + savedWrongAnswers.size());
+        }
+        if (tvWrongQuestion != null) {
+            tvWrongQuestion.setText("Q. " + current.getQuestion());
+        }
+        if (tvMyAnswer != null) {
+            tvMyAnswer.setText("✕ 내 답: " + optionText(current, current.getSelectedIndex()));
+        }
+        if (tvRealAnswer != null) {
+            tvRealAnswer.setText("✓ 정답: " + optionText(current, current.getCorrectIndex()));
+        }
+        if (tvExplanation != null) {
+            tvExplanation.setText("💡 해설: " + current.getExplanation());
+        }
+        if (retryQuizButton != null) {
+            retryQuizButton.setText(currentWrongIndex < savedWrongAnswers.size() - 1
+                    ? "다음 오답 보기"
+                    : "돌아가기");
+        }
+    }
+
+    private String optionText(WrongAnswerModel wrongAnswer, int index) {
+        List<String> options = wrongAnswer.getOptions();
+        if (index >= 0 && index < options.size()) {
+            return options.get(index);
+        }
+        return "선택 안 함";
     }
 }

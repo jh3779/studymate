@@ -211,6 +211,45 @@ public class FirestoreService {
                 .addOnFailureListener(error -> callback.onFailure(toUserMessage(error)));
     }
 
+    public void saveQuizOutcome(
+            QuizResultModel result,
+            List<WrongAnswerModel> wrongAnswers,
+            SaveCallback callback
+    ) {
+        if (result == null || isBlank(result.getUserId()) || isBlank(result.getNoteId())) {
+            callback.onFailure("퀴즈 결과 정보가 올바르지 않습니다.");
+            return;
+        }
+
+        WriteBatch batch = firestore.batch();
+        DocumentReference resultDocument = firestore.collection(QUIZ_RESULTS)
+                .document(result.getNoteId());
+        result.setId(resultDocument.getId());
+        batch.set(resultDocument, withCreatedAt(result.toMap()));
+
+        if (wrongAnswers != null) {
+            for (WrongAnswerModel wrongAnswer : wrongAnswers) {
+                if (wrongAnswer == null
+                        || isBlank(wrongAnswer.getUserId())
+                        || isBlank(wrongAnswer.getQuizId())
+                        || isBlank(wrongAnswer.getNoteId())) {
+                    callback.onFailure("오답 정보가 올바르지 않습니다.");
+                    return;
+                }
+
+                String documentId = wrongAnswer.getNoteId() + "_" + wrongAnswer.getQuizId();
+                DocumentReference wrongDocument =
+                        firestore.collection(WRONG_ANSWERS).document(documentId);
+                wrongAnswer.setId(documentId);
+                batch.set(wrongDocument, withCreatedAt(wrongAnswer.toMap()));
+            }
+        }
+
+        batch.commit()
+                .addOnSuccessListener(unused -> callback.onSuccess(resultDocument.getId()))
+                .addOnFailureListener(error -> callback.onFailure(toUserMessage(error)));
+    }
+
     public void saveWrongAnswer(WrongAnswerModel wrongAnswer, SaveCallback callback) {
         if (wrongAnswer == null
                 || isBlank(wrongAnswer.getUserId())

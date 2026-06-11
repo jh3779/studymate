@@ -104,10 +104,10 @@ app.post("/summary", async (req, res) => {
 
     const result = JSON.parse(completion.choices[0].message.content);
 
-    if (!Array.isArray(result.summary) || result.summary.length === 0) {
+    if (!Array.isArray(result.summary) || result.summary.length < 3 || result.summary.length > 5) {
       return res.status(500).json({ error: "summary 응답이 올바르지 않습니다." });
     }
-    if (!Array.isArray(result.keywords)) {
+    if (!Array.isArray(result.keywords) || result.keywords.length !== 3) {
       return res.status(500).json({ error: "keywords 응답이 올바르지 않습니다." });
     }
 
@@ -141,7 +141,7 @@ app.post("/quiz", async (req, res) => {
     const raw = JSON.parse(completion.choices[0].message.content);
     const quizzes = raw.quizzes;
 
-    if (!Array.isArray(quizzes) || quizzes.length === 0) {
+    if (!Array.isArray(quizzes) || quizzes.length !== 3) {
       return res.status(500).json({ error: "퀴즈 응답이 올바르지 않습니다." });
     }
 
@@ -153,7 +153,7 @@ app.post("/quiz", async (req, res) => {
         q.explanation && q.explanation.length > 0
     );
 
-    if (valid.length === 0) {
+    if (valid.length !== 3) {
       return res.status(500).json({ error: "유효한 퀴즈가 없습니다." });
     }
 

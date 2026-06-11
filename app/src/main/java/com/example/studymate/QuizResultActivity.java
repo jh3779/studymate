@@ -7,30 +7,32 @@ import android.widget.Button;
 import android.widget.TextView;
 import com.example.studymate.model.QuizModel;
 import com.example.studymate.model.QuizResultModel;
+import com.example.studymate.model.WrongAnswerModel;
 import com.example.studymate.service.FirestoreService;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.firestore.FieldValue;
-import com.google.firebase.firestore.FirebaseFirestore;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
 
 public class QuizResultActivity extends BaseActivity {
+    private static final String STATE_OUTCOME_SAVE_STARTED = "outcomeSaveStarted";
+
     private ArrayList<Integer> userAnswers = new ArrayList<>();
     private ArrayList<QuizModel> quizList = new ArrayList<>();
-    private FirebaseFirestore db;
     private FirebaseAuth auth;
     private final FirestoreService firestoreService = new FirestoreService();
     private String noteId = "";
     private TextView resultSaveStatusText;
+    private boolean outcomeSaveStarted = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_quiz_result);
 
-        db = FirebaseFirestore.getInstance();
         auth = FirebaseAuth.getInstance();
+        if (savedInstanceState != null) {
+            outcomeSaveStarted = savedInstanceState.getBoolean(STATE_OUTCOME_SAVE_STARTED, false);
+        }
 
         int correctCount = getIntent().getIntExtra("correctCount", 0);
         int totalCount = getIntent().getIntExtra("totalCount", 0);
@@ -83,10 +85,9 @@ public class QuizResultActivity extends BaseActivity {
             }
         }
 
-        saveQuizResultToFirestore(totalCount, correctCount, score, wrongCount);
-
-        if (wrongCount > 0) {
-            uploadWrongAnswersToFirestore();
+        if (!outcomeSaveStarted) {
+            outcomeSaveStarted = true;
+            saveOutcomeToFirestore(totalCount, correctCount, score, wrongCount);
         }
 
         if (showWrongButton != null) {
@@ -109,19 +110,27 @@ public class QuizResultActivity extends BaseActivity {
         bindClick(R.id.resultHomeButton, v -> goToAndClear(HomeActivity.class));
     }
 
-    private void saveQuizResultToFirestore(
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putBoolean(STATE_OUTCOME_SAVE_STARTED, outcomeSaveStarted);
+    }
+
+    private void saveOutcomeToFirestore(
             int totalCount,
             int correctCount,
             int score,
             int wrongCount
     ) {
         if (auth.getCurrentUser() == null || noteId == null || noteId.trim().isEmpty()) {
+            updateSaveStatus("로그인 또는 학습 기록 정보가 없어 저장을 건너뛰었습니다.");
             return;
         }
 
+        String userId = auth.getCurrentUser().getUid();
         QuizResultModel result = new QuizResultModel(
                 null,
-                auth.getCurrentUser().getUid(),
+                userId,
                 noteId,
                 totalCount,
                 correctCount,
@@ -129,115 +138,52 @@ public class QuizResultActivity extends BaseActivity {
                 null
         );
 
-        firestoreService.saveQuizResult(result, new FirestoreService.SaveCallback() {
+        List<WrongAnswerModel> wrongAnswers = buildWrongAnswers(userId);
+        firestoreService.saveQuizOutcome(result, wrongAnswers, new FirestoreService.SaveCallback() {
             @Override
             public void onSuccess(String documentId) {
                 if (wrongCount == 0) {
                     updateSaveStatus("퀴즈 결과를 저장했습니다.");
+                } else {
+                    updateSaveStatus("퀴즈 결과와 오답노트를 저장했습니다.");
                 }
             }
 
             @Override
             public void onFailure(String errorMessage) {
-                Log.e("FirestoreRulesGuard", "quiz_results 저장 실패: " + errorMessage);
-                if (wrongCount == 0) {
-                    updateSaveStatus("퀴즈 결과 저장에 실패했습니다.");
-                }
+                Log.e("FirestoreRulesGuard", "퀴즈 결과/오답 batch 저장 실패: " + errorMessage);
+                updateSaveStatus("저장에 실패했거나 이미 저장된 결과입니다.");
             }
         });
     }
 
-    /**
-     *
-     * 1. 메서드명을 지훈이가 요구한 uploadWrongAnswersToFirestore()로 명사화 변경
-     * 2. note_default_fallback 제거 및 비어있을 시 즉시 return 차단 보완
-     * 3. validQuiz() 및 wrongAnswerMatchesQuiz() 규칙 완벽 동기화
-     */
-    private void uploadWrongAnswersToFirestore() {
-        if (auth.getCurrentUser() == null) {
-            updateSaveStatus("로그인 정보가 없어 오답노트 저장을 건너뛰었습니다.");
-            return;
-        }
-        if (quizList.isEmpty() || userAnswers.isEmpty()) {
-            updateSaveStatus("저장할 오답 데이터가 없습니다.");
-            return;
-        }
-
-        // note_default_fallback을 완전히 제거하고, 유효한 실제 문서 ID가 없으면 즉시 중단
-        if (noteId == null || noteId.trim().isEmpty()) {
-            Log.e("FirestoreRulesGuard", "Error: 실제 study_notes 문서 ID가 누락되어 오답 저장을 중단합니다.");
-            updateSaveStatus("노트 정보가 올바르지 않아 오답노트가 저장되지 않았습니다.");
-            showShortToast("노트 정보가 올바르지 않아 오답노트가 서버에 기록되지 않았습니다.");
-            return;
-        }
-
-        String currentUserId = auth.getCurrentUser().getUid();
-
+    private List<WrongAnswerModel> buildWrongAnswers(String userId) {
+        List<WrongAnswerModel> wrongAnswers = new ArrayList<>();
         for (int i = 0; i < quizList.size(); i++) {
             if (i < userAnswers.size()) {
                 QuizModel quiz = quizList.get(i);
-                final int userSelected = userAnswers.get(i);
-
-                // 틀린 문제만 필터링하여 업로드
+                int userSelected = userAnswers.get(i);
                 if (userSelected != quiz.getAnswerIndex()) {
-                    if (quiz.getId() == null || quiz.getId().startsWith("ai_gen_")) {
-
-                        //  validQuiz() 규칙 100% 매칭 스키마 (7개 필드 정확히 일치)
-                        Map<String, Object> quizSchema = new HashMap<>();
-                        quizSchema.put("noteId", noteId);                          // verifiedOwner 및 noteExists 조건 충족
-                        quizSchema.put("userId", currentUserId);                    // noteBelongsTo 조건 충족
-                        quizSchema.put("question", quiz.getQuestion());
-                        quizSchema.put("options", quiz.getOptions());
-                        quizSchema.put("answerIndex", quiz.getAnswerIndex());
-                        quizSchema.put("explanation", quiz.getExplanation());
-                        quizSchema.put("createdAt", FieldValue.serverTimestamp());
-
-                        db.collection("quizzes")
-                                .add(quizSchema)
-                                .addOnSuccessListener(quizDocRef -> {
-                                    String realQuizId = quizDocRef.getId();
-                                    quiz.setId(realQuizId);
-
-                                    // 1단계 성공 시, 생성된 정식 quizId를 결합하여 2단계 wrong_answers 저장 실행
-                                    executeWrongAnswerInsert(currentUserId, realQuizId, quiz, userSelected);
-                                })
-                                .addOnFailureListener(e -> {
-                                    Log.e("FirestoreRulesGuard", "1단계 quizzes 선행 생성 실패: " + e.getMessage());
-                                    updateSaveStatus("오답 저장에 실패했습니다. 잠시 후 다시 시도해 주세요.");
-                                    showShortToast("보안 권한 거부로 인해 오답 퀴즈 생성에 실패했습니다.");
-                                });
-                    } else {
-                        // 원본 퀴즈 ID가 이미 존재하는 경우 바로 2단계 저장
-                        executeWrongAnswerInsert(currentUserId, quiz.getId(), quiz, userSelected);
+                    if (quiz.getId() == null || quiz.getId().trim().isEmpty()) {
+                        Log.e("FirestoreRulesGuard", "quizId 누락으로 오답 저장 제외: index=" + i);
+                        continue;
                     }
+                    wrongAnswers.add(new WrongAnswerModel(
+                            null,
+                            userId,
+                            quiz.getId(),
+                            noteId,
+                            userSelected,
+                            quiz.getAnswerIndex(),
+                            quiz.getQuestion(),
+                            quiz.getOptions(),
+                            quiz.getExplanation(),
+                            null
+                    ));
                 }
             }
         }
-    }
-
-    /**
-     * wrongAnswerMatchesQuiz() 규칙 매칭
-     * quizzes 문서에 들어간 원본 데이터와 한 자의 텍스트 오차도 없이 완벽하게 정합성을 맞춤
-     */
-    private void executeWrongAnswerInsert(String userId, String actualQuizId, QuizModel quiz, int userSelected) {
-        Map<String, Object> wrongAnswerData = new HashMap<>();
-        wrongAnswerData.put("userId", userId);
-        wrongAnswerData.put("quizId", actualQuizId);
-        wrongAnswerData.put("noteId", noteId);
-        wrongAnswerData.put("question", quiz.getQuestion());
-        wrongAnswerData.put("options", quiz.getOptions());
-        wrongAnswerData.put("selectedIndex", userSelected);
-        wrongAnswerData.put("correctIndex", quiz.getAnswerIndex()); // rules 검증용 answerIndex 매핑 동기화
-        wrongAnswerData.put("explanation", quiz.getExplanation());
-        wrongAnswerData.put("createdAt", FieldValue.serverTimestamp());
-
-        db.collection("wrong_answers")
-                .add(wrongAnswerData)
-                .addOnSuccessListener(documentReference -> updateSaveStatus("오답노트에 저장했습니다."))
-                .addOnFailureListener(e -> {
-                    Log.e("FirestoreRulesGuard", "2단계 wrong_answers 최종 적재 실패 (rules 정합성 오류 확인 필요): " + e.getMessage());
-                    updateSaveStatus("오답 저장에 실패했습니다. 잠시 후 다시 시도해 주세요.");
-                });
+        return wrongAnswers;
     }
 
     private void updateSaveStatus(String message) {

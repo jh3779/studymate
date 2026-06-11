@@ -78,6 +78,16 @@ public class QuizActivity extends BaseActivity {
                 String explanation = obj.optString("explanation", "해설이 제공되지 않는 문제입니다.");
                 String quizId = obj.optString("id", null);
 
+                if (question.trim().isEmpty()
+                        || optionsList.size() != 4
+                        || answerIndex < 0
+                        || answerIndex > 3
+                        || explanation.trim().isEmpty()
+                        || quizId == null
+                        || quizId.trim().isEmpty()) {
+                    continue;
+                }
+
                 QuizModel quiz = new QuizModel();
                 quiz.setId(quizId);
                 quiz.setQuestion(question);
@@ -86,6 +96,9 @@ public class QuizActivity extends BaseActivity {
                 quiz.setExplanation(explanation);
 
                 quizList.add(quiz);
+            }
+            if (quizList.size() != 3) {
+                quizList.clear();
             }
         } catch (JSONException e) {
             e.printStackTrace();
@@ -105,6 +118,7 @@ public class QuizActivity extends BaseActivity {
             if (i < currentQuiz.getOptions().size()) {
                 optionViews[i].setText(currentQuiz.getOptions().get(i));
                 optionViews[i].setBackgroundResource(R.drawable.bg_option);
+                updateOptionAccessibility(i, false);
             }
         }
     }
@@ -114,7 +128,17 @@ public class QuizActivity extends BaseActivity {
         nextButton.setEnabled(true);
         for (int i = 0; i < optionViews.length; i++) {
             optionViews[i].setBackgroundResource(i == index ? R.drawable.bg_option_selected : R.drawable.bg_option);
+            updateOptionAccessibility(i, i == index);
         }
+    }
+
+    private void updateOptionAccessibility(int index, boolean selected) {
+        String optionText = optionViews[index].getText().toString();
+        optionViews[index].setSelected(selected);
+        optionViews[index].setContentDescription(
+                "보기 " + (index + 1) + ". " + optionText + ". "
+                        + (selected ? "선택됨" : "선택 안 됨")
+        );
     }
 
     private void moveNext() {

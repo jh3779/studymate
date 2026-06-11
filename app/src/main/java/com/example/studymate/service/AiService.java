@@ -183,7 +183,12 @@ public class AiService {
         List<String> summary = toStringList(obj.getJSONArray("summary"));
         List<String> keywords = toStringList(obj.getJSONArray("keywords"));
 
-        if (summary.isEmpty()) throw new Exception("summary 필드가 비어 있음");
+        if (summary.size() < 3 || summary.size() > 5) {
+            throw new Exception("summary 필드는 3~5개여야 함");
+        }
+        if (keywords.size() != 3) {
+            throw new Exception("keywords 필드는 3개여야 함");
+        }
         return new SummaryResult(summary, keywords);
     }
 
@@ -208,7 +213,7 @@ public class AiService {
             quizzes.add(new QuizItem(question, options, answerIndex, explanation));
         }
 
-        if (quizzes.isEmpty()) throw new Exception("유효한 퀴즈 없음");
+        if (quizzes.size() != 3) throw new Exception("유효한 퀴즈는 3개여야 함");
         return quizzes;
     }
 
