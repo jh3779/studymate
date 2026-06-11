@@ -10,8 +10,14 @@ val localProperties = Properties().apply {
     if (file.exists()) load(file.inputStream())
 }
 
-val teamDebugKeystore = rootProject.file("team-debug.keystore")
-val keystorePropertiesFile = rootProject.file("keystore.properties")
+val teamDebugKeystore = listOf(
+    rootProject.file("key/team-debug.keystore"),
+    rootProject.file("team-debug.keystore")
+).firstOrNull { it.exists() } ?: rootProject.file("key/team-debug.keystore")
+val keystorePropertiesFile = listOf(
+    rootProject.file("key/keystore.properties"),
+    rootProject.file("keystore.properties")
+).firstOrNull { it.exists() } ?: rootProject.file("key/keystore.properties")
 val keystoreProperties = Properties().apply {
     if (keystorePropertiesFile.exists()) load(keystorePropertiesFile.inputStream())
 }
@@ -28,7 +34,7 @@ val hasTeamDebugSigning = teamDebugKeystore.exists()
 if (hasTeamDebugFiles && !hasTeamDebugSigning) {
     throw GradleException(
         "Team debug signing is incomplete. Add both team-debug.keystore and " +
-                "keystore.properties with storePassword, keyAlias, and keyPassword."
+                "keystore.properties under key/ with storePassword, keyAlias, and keyPassword."
     )
 }
 
