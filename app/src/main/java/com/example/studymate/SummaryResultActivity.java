@@ -37,9 +37,16 @@ public class SummaryResultActivity extends BaseActivity {
         TextView quizLoadingBox = findViewById(R.id.quizLoadingBox);
 
         createQuizButton.setOnClickListener(v -> {
-            String quizSource = (summary != null && !summary.isEmpty())
+            String quizSource = (content != null && !content.trim().isEmpty())
+                    ? content
+                    : (summary != null && !summary.isEmpty()
                     ? android.text.TextUtils.join("\n", summary)
-                    : content;
+                    : "");
+
+            if (quizSource.trim().isEmpty()) {
+                showShortToast("퀴즈를 만들 학습 내용이 없습니다.");
+                return;
+            }
 
             quizLoadingBox.setVisibility(View.VISIBLE);
             createQuizButton.setEnabled(false);

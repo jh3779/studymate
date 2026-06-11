@@ -6,6 +6,8 @@ import android.util.Log;
 import android.widget.Button;
 import android.widget.TextView;
 import com.example.studymate.model.QuizModel;
+import com.example.studymate.model.QuizResultModel;
+import com.example.studymate.service.FirestoreService;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -18,6 +20,7 @@ public class QuizResultActivity extends BaseActivity {
     private ArrayList<QuizModel> quizList = new ArrayList<>();
     private FirebaseFirestore db;
     private FirebaseAuth auth;
+    private final FirestoreService firestoreService = new FirestoreService();
     private String noteId = "";
     private TextView resultSaveStatusText;
 
@@ -80,6 +83,8 @@ public class QuizResultActivity extends BaseActivity {
             }
         }
 
+        saveQuizResultToFirestore(totalCount, correctCount, score, wrongCount);
+
         if (wrongCount > 0) {
             uploadWrongAnswersToFirestore();
         }
@@ -102,6 +107,44 @@ public class QuizResultActivity extends BaseActivity {
         }
 
         bindClick(R.id.resultHomeButton, v -> goToAndClear(HomeActivity.class));
+    }
+
+    private void saveQuizResultToFirestore(
+            int totalCount,
+            int correctCount,
+            int score,
+            int wrongCount
+    ) {
+        if (auth.getCurrentUser() == null || noteId == null || noteId.trim().isEmpty()) {
+            return;
+        }
+
+        QuizResultModel result = new QuizResultModel(
+                null,
+                auth.getCurrentUser().getUid(),
+                noteId,
+                totalCount,
+                correctCount,
+                score,
+                null
+        );
+
+        firestoreService.saveQuizResult(result, new FirestoreService.SaveCallback() {
+            @Override
+            public void onSuccess(String documentId) {
+                if (wrongCount == 0) {
+                    updateSaveStatus("퀴즈 결과를 저장했습니다.");
+                }
+            }
+
+            @Override
+            public void onFailure(String errorMessage) {
+                Log.e("FirestoreRulesGuard", "quiz_results 저장 실패: " + errorMessage);
+                if (wrongCount == 0) {
+                    updateSaveStatus("퀴즈 결과 저장에 실패했습니다.");
+                }
+            }
+        });
     }
 
     /**
