@@ -1,6 +1,7 @@
 package com.example.studymate;
 
 import android.os.Bundle;
+import android.widget.Button;
 import android.widget.TextView;
 import com.example.studymate.model.QuizModel;
 import java.util.ArrayList;
@@ -21,6 +22,7 @@ public class WrongAnswerActivity extends BaseActivity {
     private TextView tvMyAnswer;
     private TextView tvRealAnswer;
     private TextView tvExplanation;
+    private Button retryQuizButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,6 +34,7 @@ public class WrongAnswerActivity extends BaseActivity {
         tvMyAnswer      = findViewById(R.id.optionOne);
         tvRealAnswer    = findViewById(R.id.optionTwo);
         tvExplanation   = findViewById(R.id.optionThree);
+        retryQuizButton = findViewById(R.id.retryQuizButton);
 
         userAnswers = (ArrayList<Integer>) getIntent().getSerializableExtra("userAnswers");
 
@@ -51,18 +54,18 @@ public class WrongAnswerActivity extends BaseActivity {
             }
         }
 
-        if (wrongIndices.isEmpty()) {
-            wrongIndices.add(0);
-        }
-
         displayWrongAnswer();
 
         bindClick(R.id.backResult, v -> finish());
         bindClick(R.id.wrongHomeTab, v -> goToAndClear(HomeActivity.class));
         bindClick(R.id.wrongMyPageTab, v -> goTo(MyPageActivity.class));
 
-        if (findViewById(R.id.retryQuizButton) != null) {
-            findViewById(R.id.retryQuizButton).setOnClickListener(v -> {
+        if (retryQuizButton != null) {
+            retryQuizButton.setOnClickListener(v -> {
+                if (wrongIndices.isEmpty()) {
+                    finish();
+                    return;
+                }
                 if (currentWrongIndex < wrongIndices.size() - 1) {
                     currentWrongIndex++;
                     displayWrongAnswer();
@@ -79,7 +82,15 @@ public class WrongAnswerActivity extends BaseActivity {
      * AI 데이터 주입형 실시간 렌더링 함수
      */
     private void displayWrongAnswer() {
-        if (wrongIndices.isEmpty() || quizList.isEmpty()) return;
+        if (wrongIndices.isEmpty() || quizList.isEmpty()) {
+            if (tvWrongProgress != null) tvWrongProgress.setText("오답 0/0");
+            if (tvWrongQuestion != null) tvWrongQuestion.setText("틀린 문제가 전혀 없습니다! 모든 문제를 마스터하셨습니다. 👍");
+            if (tvMyAnswer != null) tvMyAnswer.setText("");
+            if (tvRealAnswer != null) tvRealAnswer.setText("");
+            if (tvExplanation != null) tvExplanation.setText("");
+            if (retryQuizButton != null) retryQuizButton.setText("돌아가기");
+            return;
+        }
 
         int originalIdx = wrongIndices.get(currentWrongIndex);
         QuizModel currentQuiz = quizList.get(originalIdx);
@@ -91,23 +102,21 @@ public class WrongAnswerActivity extends BaseActivity {
         if (tvWrongQuestion != null) {
             tvWrongQuestion.setText("Q" + (originalIdx + 1) + ". " + currentQuiz.getQuestion());
         }
-        // 내 선택 답안 매핑 (userAnswers와 currentQuiz만 사용)
+
         if (userAnswers != null && originalIdx < userAnswers.size()) {
             int userSelection = userAnswers.get(originalIdx);
             if (tvMyAnswer != null && userSelection >= 0 && userSelection < currentQuiz.getOptions().size()) {
                 tvMyAnswer.setText("✕ 내 답: " + currentQuiz.getOptions().get(userSelection));
-            } else {
-                if (tvMyAnswer != null) tvMyAnswer.setText("✕ 내 답: 선택 안 함");
             }
         } else {
             if (tvMyAnswer != null) tvMyAnswer.setText("✕ 내 답: 선택 안 함");
         }
-        // 실제 정답 매핑 (currentQuiz만 사용 및 중괄호 완전 폐쇄)
+
         int correctIndex = currentQuiz.getAnswerIndex();
         if (tvRealAnswer != null && correctIndex >= 0 && correctIndex < currentQuiz.getOptions().size()) {
             tvRealAnswer.setText("✓ 정답: " + currentQuiz.getOptions().get(correctIndex));
         }
-        // AI 생성 해설 매핑 (currentQuiz만 사용)
+
         if (tvExplanation != null) {
             tvExplanation.setText("💡 해설: " + currentQuiz.getExplanation());
         }
