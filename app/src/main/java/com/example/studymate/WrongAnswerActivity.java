@@ -92,6 +92,7 @@ public class WrongAnswerActivity extends BaseActivity {
             tvWrongQuestion.setText("Q" + (originalIdx + 1) + ". " + currentQuiz.getQuestion());
         }
 
+        // [교정완료] scope 이탈 버그 및 구 options 배열 잔재 수정 (178, 179라인 해결)
         if (userAnswers != null && originalIdx < userAnswers.size()) {
             int userSelection = userAnswers.get(originalIdx);
             if (tvMyAnswer != null && userSelection >= 0 && userSelection < currentQuiz.getOptions().size()) {
@@ -101,9 +102,9 @@ public class WrongAnswerActivity extends BaseActivity {
             if (tvMyAnswer != null) tvMyAnswer.setText("✕ 내 답: 선택 안 함");
         }
 
-        int correctSelection = currentQuiz.getAnswerIndex();
-        if (tvRealAnswer != null && correctSelection >= 0 && correctSelection < currentQuiz.getOptions().size()) {
-            tvRealAnswer.setText("✓ 정답: " + currentQuiz.getOptions().get(correctSelection));
+        int correctIndex = currentQuiz.getAnswerIndex();
+        if (tvRealAnswer != null && correctIndex >= 0 && correctIndex < currentQuiz.getOptions().size()) {
+            tvRealAnswer.setText("✓ 정답: " + currentQuiz.getOptions().get(correctIndex));
         }
 
         if (tvExplanation != null) {

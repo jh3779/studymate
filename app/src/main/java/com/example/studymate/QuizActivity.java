@@ -139,7 +139,7 @@ public class QuizActivity extends BaseActivity {
             Intent intent = new Intent(this, QuizResultActivity.class);
             intent.putExtra("correctCount", correctCount);
             intent.putExtra("totalCount", quizList.size());
-            intent.putExtra("userAnswers", userAnswers);
+            intent.putIntegerArrayListExtra("userAnswers", userAnswers); // 단일 정식 통로 규격 사용
             intent.putExtra("quizListSerializable", quizList);
             startActivity(intent);
             finish();

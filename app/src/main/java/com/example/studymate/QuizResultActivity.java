@@ -31,7 +31,7 @@ public class QuizResultActivity extends BaseActivity {
         int correctCount = getIntent().getIntExtra("correctCount", 0);
         int totalCount = getIntent().getIntExtra("totalCount", 0);
 
-        ArrayList<Integer> receivedAnswers = (ArrayList<Integer>) getIntent().getSerializableExtra("userAnswers");
+        ArrayList<Integer> receivedAnswers = getIntent().getIntegerArrayListExtra("userAnswers");
         if (receivedAnswers != null) {
             userAnswers = receivedAnswers;
         }
@@ -90,23 +90,22 @@ public class QuizResultActivity extends BaseActivity {
             if (i < userAnswers.size()) {
                 QuizModel quiz = quizList.get(i);
 
-                // 실제 채점 결과 오답 판정일 때만 적재 처리 수행
                 if (userAnswers.get(i) != quiz.getAnswerIndex()) {
-                    quiz.setUserId(currentUserId);
-                    quiz.setUserSelectedIndex(userAnswers.get(i));
-
-                    // 원본 모델의 맵 변환 기능을 100% 활용
-                    Map<String, Object> uploadMap = quiz.toMap();
-
-                    // 지훈이가 요구한 Firestore 스키마 검증 전용 필드 강제 보완 매핑
-                    uploadMap.put("userSelectedIndex", quiz.getUserSelectedIndex());
-                    uploadMap.put("isCorrect", quiz.isCorrect());
+                    // wrong_answers 정식 명세 컬럼 동기화
+                    Map<String, Object> wrongAnswerData = new HashMap<>();
+                    wrongAnswerData.put("userId", currentUserId);
+                    wrongAnswerData.put("quizId", quiz.getId() != null ? quiz.getId() : "ai_gen_" + i);
+                    wrongAnswerData.put("noteId", "note_" + currentUserId); // 오답노트 맵핑 ID 생성
+                    wrongAnswerData.put("question", quiz.getQuestion());
+                    wrongAnswerData.put("options", quiz.getOptions());
+                    wrongAnswerData.put("selectedIndex", userAnswers.get(i)); // 내가 고른 오답 인덱스
+                    wrongAnswerData.put("correctIndex", quiz.getAnswerIndex()); // 진짜 정답 인덱스
+                    wrongAnswerData.put("explanation", quiz.getExplanation());
+                    wrongAnswerData.put("createdAt", FieldValue.serverTimestamp());
 
                     db.collection("wrong_answers")
-                            .add(uploadMap)
-                            .addOnSuccessListener(documentReference -> {
-                                quiz.setId(documentReference.getId());
-                            })
+                            .add(wrongAnswerData)
+                            .addOnSuccessListener(documentReference -> quiz.setId(documentReference.getId()))
                             .addOnFailureListener(Throwable::printStackTrace);
                 }
             }
