@@ -11,9 +11,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * [이슈 #14 해결] 오답 데이터 Firestore wrong_answers 컬렉션 적재 파트
- */
 public class QuizResultActivity extends BaseActivity {
     private ArrayList<Integer> userAnswers = new ArrayList<>();
     private ArrayList<QuizModel> quizList = new ArrayList<>();
@@ -36,13 +33,13 @@ public class QuizResultActivity extends BaseActivity {
             userAnswers = receivedAnswers;
         }
 
-        // QuizActivity가 토스해준 원본 AI 퀴즈 객체 리스트 수신
         ArrayList<QuizModel> receivedQuizList = (ArrayList<QuizModel>) getIntent().getSerializableExtra("quizListSerializable");
         if (receivedQuizList != null) {
             quizList = receivedQuizList;
         }
 
-        int wrongCount = totalCount - correctCount;
+        // 지훈이 피드백 반영: 중복 선언 완전 제거 및 보정 수식 반영 완료
+        int wrongCount = Math.max(0, totalCount - correctCount);
         int score = totalCount == 0 ? 0 : Math.round((correctCount * 100f) / totalCount);
 
         TextView scoreCircle = findViewById(R.id.scoreCircle);
@@ -60,7 +57,6 @@ public class QuizResultActivity extends BaseActivity {
             }
         }
 
-        // 유저가 실제 틀린 문제만 선별하여 파이어베이스 Cloud Firestore 서버에 영구 적재
         uploadWrongAnswersToFirestore();
 
         bindClick(R.id.showWrongButton, v -> {
@@ -69,8 +65,7 @@ public class QuizResultActivity extends BaseActivity {
                 return;
             }
             Intent intent = new Intent(this, WrongAnswerActivity.class);
-            intent.putExtra("userAnswers", userAnswers);
-            // 오답노트 화면이 더미 텍스트를 파괴하고 진짜 AI가 만든 문제를 그리도록 데이터 넘김
+            intent.putIntegerArrayListExtra("userAnswers", userAnswers);
             intent.putExtra("quizListSerializable", quizList);
             startActivity(intent);
         });
@@ -78,9 +73,6 @@ public class QuizResultActivity extends BaseActivity {
         bindClick(R.id.resultHomeButton, v -> goToAndClear(HomeActivity.class));
     }
 
-    /**
-     * 틀린 문항들을 Firestore wrong_answers 컬렉션에 Document로 밀어 넣는 함수
-     */
     private void uploadWrongAnswersToFirestore() {
         if (auth.getCurrentUser() == null || quizList.isEmpty() || userAnswers.isEmpty()) return;
 
@@ -91,15 +83,14 @@ public class QuizResultActivity extends BaseActivity {
                 QuizModel quiz = quizList.get(i);
 
                 if (userAnswers.get(i) != quiz.getAnswerIndex()) {
-                    // wrong_answers 정식 명세 컬럼 동기화
                     Map<String, Object> wrongAnswerData = new HashMap<>();
                     wrongAnswerData.put("userId", currentUserId);
                     wrongAnswerData.put("quizId", quiz.getId() != null ? quiz.getId() : "ai_gen_" + i);
-                    wrongAnswerData.put("noteId", "note_" + currentUserId); // 오답노트 맵핑 ID 생성
+                    wrongAnswerData.put("noteId", "note_" + currentUserId);
                     wrongAnswerData.put("question", quiz.getQuestion());
                     wrongAnswerData.put("options", quiz.getOptions());
-                    wrongAnswerData.put("selectedIndex", userAnswers.get(i)); // 내가 고른 오답 인덱스
-                    wrongAnswerData.put("correctIndex", quiz.getAnswerIndex()); // 진짜 정답 인덱스
+                    wrongAnswerData.put("selectedIndex", userAnswers.get(i));
+                    wrongAnswerData.put("correctIndex", quiz.getAnswerIndex());
                     wrongAnswerData.put("explanation", quiz.getExplanation());
                     wrongAnswerData.put("createdAt", FieldValue.serverTimestamp());
 

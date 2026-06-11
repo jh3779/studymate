@@ -91,22 +91,23 @@ public class WrongAnswerActivity extends BaseActivity {
         if (tvWrongQuestion != null) {
             tvWrongQuestion.setText("Q" + (originalIdx + 1) + ". " + currentQuiz.getQuestion());
         }
-
-        // [교정완료] scope 이탈 버그 및 구 options 배열 잔재 수정 (178, 179라인 해결)
+        // 내 선택 답안 매핑 (userAnswers와 currentQuiz만 사용)
         if (userAnswers != null && originalIdx < userAnswers.size()) {
             int userSelection = userAnswers.get(originalIdx);
             if (tvMyAnswer != null && userSelection >= 0 && userSelection < currentQuiz.getOptions().size()) {
                 tvMyAnswer.setText("✕ 내 답: " + currentQuiz.getOptions().get(userSelection));
+            } else {
+                if (tvMyAnswer != null) tvMyAnswer.setText("✕ 내 답: 선택 안 함");
             }
         } else {
             if (tvMyAnswer != null) tvMyAnswer.setText("✕ 내 답: 선택 안 함");
         }
-
+        // 실제 정답 매핑 (currentQuiz만 사용 및 중괄호 완전 폐쇄)
         int correctIndex = currentQuiz.getAnswerIndex();
         if (tvRealAnswer != null && correctIndex >= 0 && correctIndex < currentQuiz.getOptions().size()) {
             tvRealAnswer.setText("✓ 정답: " + currentQuiz.getOptions().get(correctIndex));
         }
-
+        // AI 생성 해설 매핑 (currentQuiz만 사용)
         if (tvExplanation != null) {
             tvExplanation.setText("💡 해설: " + currentQuiz.getExplanation());
         }
