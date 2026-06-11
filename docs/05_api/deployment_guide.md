@@ -103,13 +103,14 @@ Android Studio에서 **Build > Clean Project → Rebuild Project** 후 실행해
 ### 팀 공용 debug 서명
 
 팀원이 동일한 SHA 인증서로 debug APK를 만들려면 공용 `team-debug.keystore`를
-프로젝트 루트에 둔다. 키 파일과 `keystore.properties`는 Git에 커밋하지 않고
+프로젝트 루트의 `key/` 폴더에 둔다. 기존 루트 위치도 호환되지만 `key/` 폴더를 권장한다.
+키 파일과 `keystore.properties`는 Git에 커밋하지 않고
 팀 내부의 안전한 채널로 공유한다.
 
 새 PC에서는 다음 순서로 설정한다.
 
-1. 전달받은 `team-debug.keystore`를 프로젝트 루트에 둔다.
-2. 전달받은 `keystore.properties`를 프로젝트 루트에 둔다.
+1. 전달받은 `team-debug.keystore`를 `key/` 폴더에 둔다.
+2. 전달받은 `keystore.properties`를 `key/` 폴더에 둔다.
 
 ```properties
 storePassword=<팀 공용 키 저장소 비밀번호>
