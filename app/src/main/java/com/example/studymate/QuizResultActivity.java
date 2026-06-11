@@ -5,8 +5,11 @@ import android.os.Bundle;
 import android.widget.TextView;
 import com.example.studymate.model.QuizModel;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * [이슈 #14 해결] 오답 데이터 Firestore wrong_answers 컬렉션 적재 파트
@@ -26,7 +29,7 @@ public class QuizResultActivity extends BaseActivity {
         auth = FirebaseAuth.getInstance();
 
         int correctCount = getIntent().getIntExtra("correctCount", 0);
-        int totalCount = getIntent().getIntExtra("totalCount", 3);
+        int totalCount = getIntent().getIntExtra("totalCount", 0);
 
         ArrayList<Integer> receivedAnswers = (ArrayList<Integer>) getIntent().getSerializableExtra("userAnswers");
         if (receivedAnswers != null) {
@@ -86,21 +89,25 @@ public class QuizResultActivity extends BaseActivity {
         for (int i = 0; i < quizList.size(); i++) {
             if (i < userAnswers.size()) {
                 QuizModel quiz = quizList.get(i);
-                // 유저가 찍은 인덱스와 정답 인덱스가 다르면 '오답'으로 간주하고 적재
+
+                // 실제 채점 결과 오답 판정일 때만 적재 처리 수행
                 if (userAnswers.get(i) != quiz.getAnswerIndex()) {
                     quiz.setUserId(currentUserId);
-                    quiz.setUserSelectedIndex(userAnswers.get(i)); // 도현 님 전용 상태값 저장
+                    quiz.setUserSelectedIndex(userAnswers.get(i));
 
-                    //아키텍처 규격 메서드 toMap()을 활용해 해시맵 구조로 파이어베이스 데이터베이스 전송
+                    // 원본 모델의 맵 변환 기능을 100% 활용
+                    Map<String, Object> uploadMap = quiz.toMap();
+
+                    // 지훈이가 요구한 Firestore 스키마 검증 전용 필드 강제 보완 매핑
+                    uploadMap.put("userSelectedIndex", quiz.getUserSelectedIndex());
+                    uploadMap.put("isCorrect", quiz.isCorrect());
+
                     db.collection("wrong_answers")
-                            .add(quiz.toMap())
+                            .add(uploadMap)
                             .addOnSuccessListener(documentReference -> {
-                                // 성공 시 Document ID 바인딩
                                 quiz.setId(documentReference.getId());
                             })
-                            .addOnFailureListener(e -> {
-                                e.printStackTrace();
-                            });
+                            .addOnFailureListener(Throwable::printStackTrace);
                 }
             }
         }

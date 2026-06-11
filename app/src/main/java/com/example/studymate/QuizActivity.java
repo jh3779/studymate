@@ -10,14 +10,14 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.List;
-
+import java.util.Date;
 /**
  * [이슈 #14 해결] AI 생성 퀴즈 데이터 동적 바인딩 액티비티
  */
 public class QuizActivity extends BaseActivity {
 
     // AI가 생성하여 전달해 준 실제 퀴즈 모델 객체 리스트 (하드코딩 제거)
-    private List<QuizModel> quizList = new ArrayList<>();
+    private ArrayList<QuizModel> quizList = new ArrayList<>();
 
     private TextView progressText;
     private TextView questionText;
@@ -75,7 +75,10 @@ public class QuizActivity extends BaseActivity {
             for (int i = 0; i < jsonArray.length(); i++) {
                 JSONObject obj = jsonArray.getJSONObject(i);
 
-                String question = obj.optString("question", "질문 로딩 실패");
+                // 순정 모델의 기본 생성자 및 Setter 주입 파이프라인 싱크 완료
+                QuizModel quiz = new QuizModel();
+                quiz.setQuestion(obj.optString("question", "질문 로딩 실패"));
+
                 JSONArray optsArray = obj.optJSONArray("options");
                 List<String> optionsList = new ArrayList<>();
                 if (optsArray != null) {
@@ -83,15 +86,11 @@ public class QuizActivity extends BaseActivity {
                         optionsList.add(optsArray.getString(j));
                     }
                 }
-                int answerIndex = obj.optInt("answerIndex", 0);
-                String explanation = obj.optString("explanation", "해설이 제공되지 않는 문제입니다.");
-
-                // 추출된 데이터를 토대로 공용 QuizModel 인스턴스 생성 및 바인딩
-                QuizModel quiz = new QuizModel();
-                quiz.setQuestion(question);
                 quiz.setOptions(optionsList);
-                quiz.setAnswerIndex(answerIndex);
-                quiz.setExplanation(explanation);
+                quiz.setAnswerIndex(obj.optInt("answerIndex", 0));
+                quiz.setExplanation(obj.optString("explanation", "해설이 제공되지 않는 문제입니다."));
+                quiz.setCreatedAt(new Date()); // 현재 시간 주입
+                quiz.setNoteId(getIntent().getStringExtra("noteId")); // 노트 ID 바인딩 보완
 
                 quizList.add(quiz);
             }
@@ -114,7 +113,6 @@ public class QuizActivity extends BaseActivity {
             if (i < currentQuiz.getOptions().size()) {
                 optionViews[i].setText(currentQuiz.getOptions().get(i));
                 optionViews[i].setBackgroundResource(R.drawable.bg_option);
-                optionViews[i].setContentDescription(currentQuiz.getOptions().get(i));
             }
         }
     }
@@ -122,16 +120,14 @@ public class QuizActivity extends BaseActivity {
     private void selectOption(int index) {
         selectedIndex = index;
         nextButton.setEnabled(true);
-        QuizModel currentQuiz = quizList.get(currentIndex);
+
         for (int i = 0; i < optionViews.length; i++) {
             optionViews[i].setBackgroundResource(i == index ? R.drawable.bg_option_selected : R.drawable.bg_option);
-            optionViews[i].setContentDescription(currentQuiz.getOptions().get(i) + (i == index ? ", 선택됨" : ""));
         }
     }
 
     private void moveNext() {
         userAnswers.add(selectedIndex);
-
         QuizModel currentQuiz = quizList.get(currentIndex);
 
         // 정답 검증 로직 반영
@@ -144,10 +140,7 @@ public class QuizActivity extends BaseActivity {
             intent.putExtra("correctCount", correctCount);
             intent.putExtra("totalCount", quizList.size());
             intent.putExtra("userAnswers", userAnswers);
-
-            // ★ 중요: 결과창에서 오답노트를 Firestore에 업로드할 수 있도록 원본 AI 퀴즈 데이터 세트 재패스
-            intent.putExtra("quizListSerializable", (ArrayList<QuizModel>) quizList);
-
+            intent.putExtra("quizListSerializable", quizList);
             startActivity(intent);
             finish();
             return;
