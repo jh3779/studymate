@@ -5,8 +5,9 @@ import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
-public class QuizModel {
+import java.io.Serializable;
+public class QuizModel implements Serializable {
+    private static final long serialVersionUID = 1L; // 직렬화 버전 ID 안정성 확보
     private String id;
     private String noteId;
     private String userId;
