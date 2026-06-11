@@ -1,13 +1,18 @@
 package com.example.studymate.service;
 
+import android.util.Log;
+
 import com.google.firebase.FirebaseNetworkException;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException;
 import com.google.firebase.auth.FirebaseAuthInvalidUserException;
 import com.google.firebase.auth.FirebaseAuthUserCollisionException;
 import com.google.firebase.auth.FirebaseUser;
 
 public class AuthService {
+    private static final String TAG = "AuthService";
+
     private final FirebaseAuth firebaseAuth;
 
     public AuthService() {
@@ -98,6 +103,8 @@ public class AuthService {
     }
 
     private String toUserMessage(Exception error) {
+        Log.e(TAG, "Firebase authentication failed", error);
+
         if (error instanceof FirebaseAuthUserCollisionException) {
             return "이미 가입된 이메일입니다.";
         }
@@ -108,6 +115,30 @@ public class AuthService {
         if (error instanceof FirebaseNetworkException) {
             return "네트워크 연결을 확인한 후 다시 시도해주세요.";
         }
-        return "인증 처리에 실패했습니다. 잠시 후 다시 시도해주세요.";
+        if (error instanceof FirebaseAuthException) {
+            String errorCode = ((FirebaseAuthException) error).getErrorCode();
+            if ("ERROR_TOO_MANY_REQUESTS".equals(errorCode)) {
+                return "요청이 너무 많습니다. 잠시 후 다시 시도해주세요.";
+            }
+            if ("ERROR_OPERATION_NOT_ALLOWED".equals(errorCode)) {
+                return "Firebase Console에서 이메일/비밀번호 로그인을 활성화해주세요.";
+            }
+            if ("ERROR_APP_NOT_AUTHORIZED".equals(errorCode)
+                    || "ERROR_INVALID_API_KEY".equals(errorCode)) {
+                return "이 앱의 Firebase API 키 또는 앱 서명 설정을 확인해주세요.";
+            }
+            return "인증 처리에 실패했습니다. 오류 코드: " + errorCode;
+        }
+
+        String detail = error.getMessage();
+        if (detail != null) {
+            String normalizedDetail = detail.toLowerCase();
+            if (normalizedDetail.contains("api key")
+                    || normalizedDetail.contains("blocked")
+                    || normalizedDetail.contains("configuration_not_found")) {
+                return "Firebase 프로젝트의 API 키, 앱 패키지명, SHA 인증서 설정을 확인해주세요.";
+            }
+        }
+        return "인증 처리에 실패했습니다. 자세한 원인은 Logcat의 AuthService 로그를 확인해주세요.";
     }
 }
