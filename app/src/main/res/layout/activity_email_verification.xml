@@ -17,7 +17,8 @@
         <TextView
             android:id="@+id/backToLoginFromVerification"
             style="@style/StudyMateBackNavigation"
-            android:text="로그인" />
+            android:text="로그인"
+            android:contentDescription="@string/cd_back_login" />
 
         <TextView
             style="@style/StudyMatePageTitle"

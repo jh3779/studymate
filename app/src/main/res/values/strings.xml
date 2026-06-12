@@ -1,6 +1,8 @@
 <resources>
     <string name="app_name">StudyMate</string>
     <string name="email_verification_resend_countdown">재전송 (%1$d초)</string>
+
+    <!-- 퀴즈 접근성 상태 안내 -->
     <string name="quiz_progress_accessibility">퀴즈 진행 %1$d번, 전체 %2$d문제</string>
     <string name="quiz_question_accessibility">%1$d번 문제. %2$s</string>
     <string name="quiz_option_accessibility">보기 %1$d. %2$s</string>
@@ -8,4 +10,29 @@
     <string name="quiz_option_not_selected">선택 안 됨</string>
     <string name="quiz_next_enabled">사용 가능</string>
     <string name="quiz_next_disabled">보기를 선택하면 사용 가능</string>
+
+    <!-- 접근성(Accessibility) 설명 문자열 -->
+    <!-- 바텀 내비게이션 -->
+    <string name="cd_tab_home">홈 탭</string>
+    <string name="cd_tab_wrong">오답노트 탭</string>
+    <string name="cd_tab_mypage">마이페이지 탭</string>
+    <!-- 뒤로가기 내비게이션 -->
+    <string name="cd_back_home">홈으로 돌아가기</string>
+    <string name="cd_back_login">로그인으로 돌아가기</string>
+    <string name="cd_back_input">학습 입력으로 돌아가기</string>
+    <string name="cd_back_summary">요약 결과로 돌아가기</string>
+    <string name="cd_back_result">퀴즈 결과로 돌아가기</string>
+    <string name="cd_back_history">학습 목록으로 돌아가기</string>
+    <!-- 홈 통계 카드 -->
+    <string name="cd_stat_study">총 학습 횟수. 탭하면 학습 목록으로 이동합니다.</string>
+    <string name="cd_stat_quiz">총 퀴즈 풀이 횟수</string>
+    <string name="cd_stat_avg">평균 정답률</string>
+    <!-- 마이페이지 통계 카드 -->
+    <string name="cd_my_stat_study">내 학습 기록 수</string>
+    <string name="cd_my_stat_quiz">내 퀴즈 풀이 수</string>
+    <string name="cd_my_stat_avg">내 평균 정답률</string>
+    <!-- 퀴즈 보기 -->
+    <string name="cd_option_format">보기 %1$d번: %2$s</string>
+    <!-- 앱 로고 -->
+    <string name="cd_app_logo">StudyMate 앱 로고</string>
 </resources>

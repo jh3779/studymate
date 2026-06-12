@@ -23,7 +23,8 @@
             <TextView
                 android:id="@+id/backResult"
                 style="@style/StudyMateBackNavigation"
-                android:text="결과" />
+                android:text="결과"
+                android:contentDescription="@string/cd_back_result" />
 
             <TextView
                 android:id="@+id/wrongAnswerEyebrow"
@@ -169,20 +170,23 @@
             style="@style/StudyMateBottomTab"
             android:layout_width="0dp"
             android:layout_weight="1"
-            android:text="홈" />
+            android:text="홈"
+            android:contentDescription="@string/cd_tab_home" />
 
         <TextView
             android:id="@+id/wrongCurrentTab"
             style="@style/StudyMateBottomTabSelected"
             android:layout_width="0dp"
             android:layout_weight="1"
-            android:text="오답노트" />
+            android:text="오답노트"
+            android:contentDescription="@string/cd_tab_wrong" />
 
         <TextView
             android:id="@+id/wrongMyPageTab"
             style="@style/StudyMateBottomTab"
             android:layout_width="0dp"
             android:layout_weight="1"
-            android:text="마이페이지" />
+            android:text="마이페이지"
+            android:contentDescription="@string/cd_tab_mypage" />
     </LinearLayout>
 </LinearLayout>
