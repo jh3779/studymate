@@ -90,6 +90,16 @@
                     android:textStyle="bold" />
             </LinearLayout>
 
+            <TextView
+                android:id="@+id/homeStatsStatusText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:gravity="center"
+                android:textColor="@color/study_text_muted"
+                android:textSize="14sp"
+                android:visibility="gone" />
+
             <Button
                 android:id="@+id/startStudyButton"
                 android:layout_width="match_parent"
@@ -119,7 +129,7 @@
                 android:layout_marginTop="12dp"
                 android:background="@drawable/bg_card"
                 android:padding="@dimen/card_padding"
-                android:text="아직 학습 기록이 없습니다.\n\n오늘의 학습을 시작해 보세요."
+                android:text="최근 학습 기록을 불러오는 중입니다."
                 android:textColor="@color/study_text"
                 android:textSize="17sp"
                 android:textStyle="bold" />

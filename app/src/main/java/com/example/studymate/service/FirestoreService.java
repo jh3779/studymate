@@ -175,6 +175,28 @@ public class FirestoreService {
                 .addOnFailureListener(error -> callback.onFailure(toUserMessage(error)));
     }
 
+    public void getQuizResults(String userId, ListCallback<QuizResultModel> callback) {
+        if (isBlank(userId)) {
+            callback.onFailure("로그인 사용자 정보를 확인할 수 없습니다.");
+            return;
+        }
+
+        firestore.collection(QUIZ_RESULTS)
+                .whereEqualTo("userId", userId)
+                .get()
+                .addOnSuccessListener(snapshot -> {
+                    List<QuizResultModel> results = new ArrayList<>();
+                    for (DocumentSnapshot document : snapshot.getDocuments()) {
+                        results.add(QuizResultModel.fromMap(
+                                document.getId(),
+                                dataWithDate(document)
+                        ));
+                    }
+                    callback.onSuccess(results);
+                })
+                .addOnFailureListener(error -> callback.onFailure(toUserMessage(error)));
+    }
+
     public void saveQuizResultWithWrongAnswers(
             QuizResultModel result,
             List<WrongAnswerModel> wrongAnswers,

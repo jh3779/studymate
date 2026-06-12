@@ -6,6 +6,7 @@ import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.example.studymate.model.QuizResultModel;
 import com.example.studymate.model.StudyNoteModel;
 import com.example.studymate.model.UserStatsModel;
 import com.example.studymate.service.AuthService;
@@ -13,8 +14,10 @@ import com.example.studymate.service.FirestoreService;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 public class HomeActivity extends BaseActivity {
     private static final int RECENT_NOTE_LIMIT = 3;
@@ -25,6 +28,7 @@ public class HomeActivity extends BaseActivity {
     private TextView totalStudyStatText;
     private TextView quizCountStatText;
     private TextView averageScoreStatText;
+    private TextView homeStatsStatusText;
     private TextView emptyRecentNotesText;
     private LinearLayout recentNotesContainer;
 
@@ -36,6 +40,7 @@ public class HomeActivity extends BaseActivity {
         totalStudyStatText = findViewById(R.id.totalStudyStatText);
         quizCountStatText = findViewById(R.id.quizCountStatText);
         averageScoreStatText = findViewById(R.id.averageScoreStatText);
+        homeStatsStatusText = findViewById(R.id.homeStatsStatusText);
         emptyRecentNotesText = findViewById(R.id.emptyRecentNotesText);
         recentNotesContainer = findViewById(R.id.recentNotesContainer);
 
@@ -52,9 +57,10 @@ public class HomeActivity extends BaseActivity {
     }
 
     private void loadHomeData() {
+        showHomeLoading();
         String userId = authService.getCurrentUserId();
         if (userId == null) {
-            showEmptyHome();
+            showSignedOutHome();
             return;
         }
 
@@ -64,41 +70,109 @@ public class HomeActivity extends BaseActivity {
                 totalStudyStatText.setText(stats.getStudyNoteCount() + "\n총 학습");
                 quizCountStatText.setText(stats.getQuizResultCount() + "\n퀴즈 풀이");
                 averageScoreStatText.setText(stats.getAverageScore() + "%\n평균 정답률");
+                homeStatsStatusText.setVisibility(View.GONE);
             }
 
             @Override
             public void onFailure(String errorMessage) {
-                showShortToast(errorMessage);
+                showStatsError(errorMessage);
             }
         });
 
         firestoreService.getStudyNotes(userId, new FirestoreService.ListCallback<StudyNoteModel>() {
             @Override
             public void onSuccess(List<StudyNoteModel> notes) {
-                renderRecentNotes(notes);
+                loadRecentNoteScores(userId, notes);
             }
 
             @Override
             public void onFailure(String errorMessage) {
-                showShortToast(errorMessage);
-                renderRecentNotes(new ArrayList<>());
+                showRecentNotesError(errorMessage);
             }
         });
     }
 
-    private void showEmptyHome() {
+    private void loadRecentNoteScores(String userId, List<StudyNoteModel> notes) {
+        firestoreService.getQuizResults(userId, new FirestoreService.ListCallback<QuizResultModel>() {
+            @Override
+            public void onSuccess(List<QuizResultModel> results) {
+                renderRecentNotes(notes, latestScoresByNote(results));
+            }
+
+            @Override
+            public void onFailure(String errorMessage) {
+                renderRecentNotes(notes, new HashMap<>());
+                showRecentStatus(
+                        "정답률을 불러오지 못했습니다. 눌러서 다시 시도해주세요.",
+                        true
+                );
+            }
+        });
+    }
+
+    private void showHomeLoading() {
+        totalStudyStatText.setText("...\n총 학습");
+        quizCountStatText.setText("...\n퀴즈 풀이");
+        averageScoreStatText.setText("...\n평균 정답률");
+        homeStatsStatusText.setText("학습 통계를 불러오는 중입니다.");
+        homeStatsStatusText.setTextColor(getColor(R.color.study_text_muted));
+        homeStatsStatusText.setOnClickListener(null);
+        homeStatsStatusText.setClickable(false);
+        homeStatsStatusText.setVisibility(View.VISIBLE);
+
+        recentNotesContainer.removeAllViews();
+        recentNotesContainer.setVisibility(View.GONE);
+        showRecentStatus("최근 학습 기록을 불러오는 중입니다.", false);
+    }
+
+    private void showSignedOutHome() {
         totalStudyStatText.setText("0\n총 학습");
         quizCountStatText.setText("0\n퀴즈 풀이");
         averageScoreStatText.setText("0%\n평균 정답률");
-        renderRecentNotes(new ArrayList<>());
+        homeStatsStatusText.setVisibility(View.GONE);
+        showRecentStatus("로그인 사용자 정보를 확인할 수 없습니다.", false);
     }
 
-    private void renderRecentNotes(List<StudyNoteModel> notes) {
+    private void showStatsError(String errorMessage) {
+        totalStudyStatText.setText("-\n총 학습");
+        quizCountStatText.setText("-\n퀴즈 풀이");
+        averageScoreStatText.setText("-\n평균 정답률");
+        homeStatsStatusText.setText(errorMessage + "\n눌러서 다시 시도해주세요.");
+        homeStatsStatusText.setTextColor(getColor(R.color.study_error));
+        homeStatsStatusText.setClickable(true);
+        homeStatsStatusText.setOnClickListener(v -> loadHomeData());
+        homeStatsStatusText.setVisibility(View.VISIBLE);
+    }
+
+    private void showRecentNotesError(String errorMessage) {
+        recentNotesContainer.removeAllViews();
+        recentNotesContainer.setVisibility(View.GONE);
+        showRecentStatus(errorMessage + "\n눌러서 다시 시도해주세요.", true);
+    }
+
+    private void showRecentStatus(String message, boolean retryable) {
+        emptyRecentNotesText.setText(message);
+        emptyRecentNotesText.setTextColor(getColor(
+                retryable ? R.color.study_error : R.color.study_text
+        ));
+        emptyRecentNotesText.setClickable(retryable);
+        emptyRecentNotesText.setFocusable(retryable);
+        emptyRecentNotesText.setOnClickListener(retryable ? v -> loadHomeData() : null);
+        emptyRecentNotesText.setVisibility(View.VISIBLE);
+    }
+
+    private void renderRecentNotes(
+            List<StudyNoteModel> notes,
+            Map<String, Integer> latestScores
+    ) {
         recentNotesContainer.removeAllViews();
 
         if (notes == null || notes.isEmpty()) {
-            emptyRecentNotesText.setVisibility(View.VISIBLE);
             recentNotesContainer.setVisibility(View.GONE);
+            showRecentStatus(
+                    "아직 학습 기록이 없습니다.\n\n오늘의 학습을 시작해 보세요.",
+                    false
+            );
             return;
         }
 
@@ -109,7 +183,7 @@ public class HomeActivity extends BaseActivity {
         for (int i = 0; i < count; i++) {
             StudyNoteModel note = notes.get(i);
             TextView card = new TextView(this);
-            card.setText(buildRecentNoteText(note));
+            card.setText(buildRecentNoteText(note, latestScores.get(note.getId())));
             card.setTextColor(getColor(R.color.study_text));
             card.setTextSize(17);
             card.setTypeface(card.getTypeface(), android.graphics.Typeface.BOLD);
@@ -132,14 +206,48 @@ public class HomeActivity extends BaseActivity {
         }
     }
 
-    private String buildRecentNoteText(StudyNoteModel note) {
+    private Map<String, Integer> latestScoresByNote(List<QuizResultModel> results) {
+        Map<String, QuizResultModel> latestResults = new HashMap<>();
+        if (results == null) {
+            return new HashMap<>();
+        }
+
+        for (QuizResultModel result : results) {
+            if (result == null || result.getNoteId() == null || result.getNoteId().trim().isEmpty()) {
+                continue;
+            }
+            QuizResultModel current = latestResults.get(result.getNoteId());
+            if (current == null || isNewer(result, current)) {
+                latestResults.put(result.getNoteId(), result);
+            }
+        }
+
+        Map<String, Integer> scores = new HashMap<>();
+        for (Map.Entry<String, QuizResultModel> entry : latestResults.entrySet()) {
+            scores.put(entry.getKey(), entry.getValue().getScore());
+        }
+        return scores;
+    }
+
+    private boolean isNewer(QuizResultModel candidate, QuizResultModel current) {
+        if (candidate.getCreatedAt() == null) {
+            return false;
+        }
+        return current.getCreatedAt() == null
+                || candidate.getCreatedAt().after(current.getCreatedAt());
+    }
+
+    private String buildRecentNoteText(StudyNoteModel note, Integer latestScore) {
         String subject = note.getSubject() == null || note.getSubject().trim().isEmpty()
                 ? "과목 없음"
                 : note.getSubject();
         String date = note.getCreatedAt() == null
                 ? "날짜 없음"
                 : new SimpleDateFormat("yyyy.MM.dd", Locale.KOREA).format(note.getCreatedAt());
-        return note.getTitle() + "\n\n" + subject + " · " + date;
+        String scoreText = latestScore == null
+                ? "퀴즈 미응시"
+                : "최근 정답률 " + latestScore + "%";
+        return note.getTitle() + "\n\n" + subject + " · " + date + "\n" + scoreText;
     }
 
     private void openStudyNote(StudyNoteModel note) {
