@@ -328,6 +328,10 @@ test("supports FirestoreService batch write contracts", async () => {
     question: "What is validated before a Firestore write?",
     answerIndex: 1,
   }));
+  quizBatch.set(doc(db, "quizzes", "quiz-3"), quizData({
+    question: "Which rule field identifies the owner?",
+    answerIndex: 1,
+  }));
   await assertSucceeds(quizBatch.commit());
 
   const resultBatch = writeBatch(db);
@@ -338,6 +342,20 @@ test("supports FirestoreService batch write contracts", async () => {
   resultBatch.set(
     doc(db, "wrong_answers", "wrong-1"),
     wrongAnswerData()
+  );
+  resultBatch.set(
+    doc(db, "wrong_answers", "wrong-2"),
+    wrongAnswerData({
+      quizId: "quiz-2",
+      question: "What is validated before a Firestore write?",
+    })
+  );
+  resultBatch.set(
+    doc(db, "wrong_answers", "wrong-3"),
+    wrongAnswerData({
+      quizId: "quiz-3",
+      question: "Which rule field identifies the owner?",
+    })
   );
   await assertSucceeds(resultBatch.commit());
 });

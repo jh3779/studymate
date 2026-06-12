@@ -10,9 +10,9 @@ import com.google.firebase.FirebaseNetworkException;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FieldValue;
+import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
-import com.google.firebase.firestore.Transaction;
 import com.google.firebase.firestore.WriteBatch;
 import com.google.android.gms.tasks.Tasks;
 
@@ -232,7 +232,9 @@ public class FirestoreService {
         List<WrongAnswerModel> safeWrongAnswers = wrongAnswers == null
                 ? new ArrayList<>()
                 : wrongAnswers;
-        Map<DocumentReference, WrongAnswerModel> wrongDocuments = new HashMap<>();
+        WriteBatch batch = firestore.batch();
+        batch.set(resultDocument, withCreatedAt(result.toMap()));
+
         for (WrongAnswerModel wrongAnswer : safeWrongAnswers) {
             if (wrongAnswer == null
                     || isBlank(wrongAnswer.getUserId())
@@ -246,36 +248,11 @@ public class FirestoreService {
             DocumentReference wrongDocument =
                     firestore.collection(WRONG_ANSWERS).document(documentId);
             wrongAnswer.setId(documentId);
-            wrongDocuments.put(wrongDocument, wrongAnswer);
+            batch.set(wrongDocument, withCreatedAt(wrongAnswer.toMap()));
         }
 
-        firestore.runTransaction((Transaction.Function<String>) transaction -> {
-                    DocumentSnapshot resultSnapshot = transaction.get(resultDocument);
-                    Map<DocumentReference, DocumentSnapshot> wrongSnapshots = new HashMap<>();
-                    for (DocumentReference wrongDocument : wrongDocuments.keySet()) {
-                        wrongSnapshots.put(wrongDocument, transaction.get(wrongDocument));
-                    }
-
-                    if (resultSnapshot.exists()) {
-                        transaction.update(resultDocument, withoutCreatedAt(result.toMap()));
-                    } else {
-                        transaction.set(resultDocument, withCreatedAt(result.toMap()));
-                    }
-
-                    for (Map.Entry<DocumentReference, WrongAnswerModel> entry
-                            : wrongDocuments.entrySet()) {
-                        DocumentReference wrongDocument = entry.getKey();
-                        WrongAnswerModel wrongAnswer = entry.getValue();
-                        DocumentSnapshot wrongSnapshot = wrongSnapshots.get(wrongDocument);
-                        if (wrongSnapshot.exists()) {
-                            transaction.update(wrongDocument, withoutCreatedAt(wrongAnswer.toMap()));
-                        } else {
-                            transaction.set(wrongDocument, withCreatedAt(wrongAnswer.toMap()));
-                        }
-                    }
-                    return resultDocument.getId();
-                })
-                .addOnSuccessListener(callback::onSuccess)
+        batch.commit()
+                .addOnSuccessListener(unused -> callback.onSuccess(resultDocument.getId()))
                 .addOnFailureListener(error -> callback.onFailure(toUserMessage(error)));
     }
 
@@ -371,12 +348,6 @@ public class FirestoreService {
         return values;
     }
 
-    private Map<String, Object> withoutCreatedAt(Map<String, Object> source) {
-        Map<String, Object> values = new HashMap<>(source);
-        values.remove("createdAt");
-        return values;
-    }
-
     private Map<String, Object> dataWithDate(DocumentSnapshot document) {
         Map<String, Object> values = document.getData() == null
                 ? new HashMap<>()
@@ -392,6 +363,12 @@ public class FirestoreService {
     private String toUserMessage(Exception error) {
         if (error instanceof FirebaseNetworkException) {
             return "네트워크 연결을 확인한 후 다시 시도해주세요.";
+        }
+        if (error instanceof FirebaseFirestoreException) {
+            FirebaseFirestoreException firestoreError = (FirebaseFirestoreException) error;
+            if (firestoreError.getCode() == FirebaseFirestoreException.Code.PERMISSION_DENIED) {
+                return "데이터 저장 권한이 없습니다. 로그인 및 이메일 인증 상태를 확인해주세요.";
+            }
         }
         return "데이터 처리에 실패했습니다. 잠시 후 다시 시도해주세요.";
     }
