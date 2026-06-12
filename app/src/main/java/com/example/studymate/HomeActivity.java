@@ -39,6 +39,7 @@ public class HomeActivity extends BaseActivity {
         emptyRecentNotesText = findViewById(R.id.emptyRecentNotesText);
         recentNotesContainer = findViewById(R.id.recentNotesContainer);
 
+        bindClick(R.id.totalStudyStatText, v -> goTo(StudyHistoryActivity.class));
         bindClick(R.id.startStudyButton, v -> goTo(StudyInputActivity.class));
         bindClick(R.id.wrongTab, v -> switchTopLevel(WrongAnswerActivity.class));
         bindClick(R.id.myPageTab, v -> switchTopLevel(MyPageActivity.class));

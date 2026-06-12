@@ -80,7 +80,7 @@ public class WrongAnswerActivity extends BaseActivity {
             retryQuizButton.setOnClickListener(v -> {
                 if (showingSavedWrongAnswers) {
                     if (savedWrongAnswers.isEmpty()) {
-                        finish();
+                        returnHome();
                         return;
                     }
                     if (currentWrongIndex < savedWrongAnswers.size() - 1) {
@@ -88,12 +88,12 @@ public class WrongAnswerActivity extends BaseActivity {
                         displaySavedWrongAnswer();
                     } else {
                         showShortToast("모든 오답 확인을 완료했습니다.");
-                        finish();
+                        returnHome();
                     }
                     return;
                 }
                 if (wrongIndices.isEmpty()) {
-                    finish();
+                    returnHome();
                     return;
                 }
                 if (currentWrongIndex < wrongIndices.size() - 1) {
@@ -101,10 +101,14 @@ public class WrongAnswerActivity extends BaseActivity {
                     displayWrongAnswer();
                 } else {
                     showShortToast("모든 오답 확인을 완료했습니다.");
-                    finish();
+                    returnHome();
                 }
             });
         }
+    }
+
+    private void returnHome() {
+        goToAndClear(HomeActivity.class);
     }
 
     private void configureHeader() {

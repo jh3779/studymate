@@ -52,16 +52,21 @@ public class QuizResultActivity extends BaseActivity {
             quizList = receivedQuizList;
         }
 
+        if (!quizList.isEmpty()) {
+            totalCount = quizList.size();
+            correctCount = countCorrectAnswers();
+        }
+
         int wrongCount = QuizScoring.wrongCount(correctCount, totalCount);
         int score = QuizScoring.scorePercent(correctCount, totalCount);
 
-        TextView scoreCircle = findViewById(R.id.scoreCircle);
+        TextView scorePercentText = findViewById(R.id.scorePercentText);
         TextView summaryText = findViewById(R.id.resultSummaryText);
         TextView wrongSummaryBox = findViewById(R.id.wrongSummaryBox);
         resultSaveStatusText = findViewById(R.id.resultSaveStatusText);
         Button showWrongButton = findViewById(R.id.showWrongButton);
 
-        if (scoreCircle != null) scoreCircle.setText(score + "%\n정답률");
+        if (scorePercentText != null) scorePercentText.setText(score + "%");
         if (summaryText != null) summaryText.setText(totalCount + "문제 중 " + correctCount + "문제 정답");
 
         if (wrongSummaryBox != null) {
@@ -110,6 +115,19 @@ public class QuizResultActivity extends BaseActivity {
         }
 
         bindClick(R.id.resultHomeButton, v -> goToAndClear(HomeActivity.class));
+    }
+
+    private int countCorrectAnswers() {
+        int correctAnswers = 0;
+        for (int i = 0; i < quizList.size(); i++) {
+            if (i >= userAnswers.size() || userAnswers.get(i) == null) {
+                continue;
+            }
+            if (userAnswers.get(i) == quizList.get(i).getAnswerIndex()) {
+                correctAnswers++;
+            }
+        }
+        return correctAnswers;
     }
 
     private void saveOutcomeToFirestore(

@@ -23,17 +23,33 @@
             android:layout_marginTop="@dimen/header_title_gap"
             android:text="퀴즈 결과" />
 
-        <TextView
-            android:id="@+id/scoreCircle"
+        <LinearLayout
             android:layout_width="160dp"
             android:layout_height="160dp"
             android:layout_gravity="center_horizontal"
             android:layout_marginTop="@dimen/page_content_gap"
             android:background="@drawable/bg_card"
             android:gravity="center"
-            android:textColor="@color/study_text"
-            android:textSize="36sp"
-            android:textStyle="bold" />
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/scorePercentText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/study_text"
+                android:textSize="42sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/scoreLabelText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="정답률"
+                android:textColor="@color/study_text_muted"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+        </LinearLayout>
 
         <TextView
             android:id="@+id/resultSummaryText"
