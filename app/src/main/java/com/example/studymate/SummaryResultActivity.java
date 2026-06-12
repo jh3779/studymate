@@ -7,19 +7,19 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.example.studymate.model.QuizModel;
-import com.example.studymate.service.AiService;
-import com.example.studymate.service.AuthService;
-import com.example.studymate.service.FirestoreService;
+import androidx.core.content.res.ResourcesCompat;
+import androidx.lifecycle.ViewModelProvider;
 
-import java.util.ArrayList;
+import com.example.studymate.model.QuizModel;
+
 import java.util.List;
 
 public class SummaryResultActivity extends BaseActivity {
-
-    private final AiService aiService = new AiService();
-    private final AuthService authService = new AuthService();
-    private final FirestoreService firestoreService = new FirestoreService();
+    private SummaryResultViewModel viewModel;
+    private Button createQuizButton;
+    private TextView quizLoadingBox;
+    private String noteId;
+    private String quizSource;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -27,103 +27,69 @@ public class SummaryResultActivity extends BaseActivity {
         setContentView(R.layout.activity_summary_result);
 
         Intent intent = getIntent();
-        String noteId = intent.getStringExtra("noteId");
+        noteId = intent.getStringExtra("noteId");
         String title = intent.getStringExtra("title");
         String subject = intent.getStringExtra("subject");
-        ArrayList<String> summary = intent.getStringArrayListExtra("summary");
-        ArrayList<String> keywords = intent.getStringArrayListExtra("keywords");
+        java.util.ArrayList<String> summary = intent.getStringArrayListExtra("summary");
+        java.util.ArrayList<String> keywords = intent.getStringArrayListExtra("keywords");
         String content = intent.getStringExtra("content");
 
         bindSummaryData(title, subject, summary, keywords);
+        quizSource = (content != null && !content.trim().isEmpty())
+                ? content
+                : (summary != null && !summary.isEmpty()
+                ? android.text.TextUtils.join("\n", summary)
+                : "");
 
         bindClick(R.id.backInput, v -> finish());
 
-        Button createQuizButton = findViewById(R.id.createQuizButton);
-        TextView quizLoadingBox = findViewById(R.id.quizLoadingBox);
+        createQuizButton = findViewById(R.id.createQuizButton);
+        quizLoadingBox = findViewById(R.id.quizLoadingBox);
+        viewModel = new ViewModelProvider(this).get(SummaryResultViewModel.class);
+        viewModel.getState().observe(this, this::renderQuizState);
 
-        createQuizButton.setOnClickListener(v -> {
-            String quizSource = (content != null && !content.trim().isEmpty())
-                    ? content
-                    : (summary != null && !summary.isEmpty()
-                    ? android.text.TextUtils.join("\n", summary)
-                    : "");
-
-            if (quizSource.trim().isEmpty()) {
-                showShortToast("퀴즈를 만들 학습 내용이 없습니다.");
-                return;
-            }
-
-            quizLoadingBox.setVisibility(View.VISIBLE);
-            createQuizButton.setEnabled(false);
-            createQuizButton.setText("퀴즈 생성 중...");
-
-            aiService.generateQuizzes(quizSource, new AiService.QuizCallback() {
-                @Override
-                public void onSuccess(List<AiService.QuizItem> quizzes) {
-                    saveQuizzesAndStart(noteId, quizzes, quizLoadingBox, createQuizButton);
-                }
-
-                @Override
-                public void onFailure(String errorMessage) {
-                    quizLoadingBox.setVisibility(View.GONE);
-                    createQuizButton.setEnabled(true);
-                    createQuizButton.setText("퀴즈 생성하기");
-                    showShortToast(errorMessage);
-                }
-            });
-        });
+        createQuizButton.setOnClickListener(
+                v -> viewModel.generateQuizzes(noteId, quizSource)
+        );
     }
 
-    private void saveQuizzesAndStart(
-            String noteId,
-            List<AiService.QuizItem> quizzes,
-            TextView quizLoadingBox,
-            Button createQuizButton
-    ) {
-        String userId = authService.getCurrentUserId();
-        if (noteId == null || noteId.trim().isEmpty() || userId == null) {
-            quizLoadingBox.setVisibility(View.GONE);
-            createQuizButton.setEnabled(true);
-            createQuizButton.setText("퀴즈 생성하기");
-            showShortToast("학습 기록 정보를 확인할 수 없습니다.");
-            return;
-        }
-
-        List<QuizModel> quizModels = new ArrayList<>();
-        for (AiService.QuizItem item : quizzes) {
-            quizModels.add(new QuizModel(
-                    null,
-                    noteId,
-                    userId,
-                    item.question,
-                    item.options,
-                    item.answerIndex,
-                    item.explanation,
-                    null
-            ));
-        }
-
-        firestoreService.saveQuizzes(quizModels, new FirestoreService.SaveListCallback() {
-            @Override
-            public void onSuccess(List<String> documentIds) {
-                quizLoadingBox.setVisibility(View.GONE);
-                createQuizButton.setEnabled(true);
-                createQuizButton.setText("퀴즈 생성하기");
-
+    private void renderQuizState(SummaryResultViewModel.State state) {
+        switch (state.status) {
+            case GENERATING:
+                setQuizLoading(true, "⏳ AI 퀴즈 생성 중...\n잠시만 기다려주세요", "퀴즈 생성 중...");
+                break;
+            case SAVING:
+                setQuizLoading(true, "⏳ 퀴즈 저장 중...\n잠시만 기다려주세요", "퀴즈 저장 중...");
+                break;
+            case SUCCESS:
+                List<QuizModel> quizzes = state.quizzes;
+                viewModel.consumeTerminalState();
+                setQuizLoading(false, "", "");
                 Intent quizIntent = new Intent(SummaryResultActivity.this, QuizActivity.class);
                 quizIntent.putExtra("noteId", noteId);
-                quizIntent.putExtra("quizzesJson", quizzesToJson(quizModels));
+                quizIntent.putExtra("quizzesJson", quizzesToJson(quizzes));
                 startActivity(quizIntent);
-            }
-
-            @Override
-            public void onFailure(String errorMessage) {
-                quizLoadingBox.setVisibility(View.GONE);
-                createQuizButton.setEnabled(true);
-                createQuizButton.setText("퀴즈 생성하기");
+                break;
+            case ERROR:
+                String errorMessage = state.errorMessage;
+                viewModel.consumeTerminalState();
+                setQuizLoading(false, "", "");
                 showShortToast(errorMessage);
-            }
-        });
+                break;
+            case IDLE:
+            default:
+                setQuizLoading(false, "", "");
+                break;
+        }
+    }
+
+    private void setQuizLoading(boolean loading, String message, String buttonText) {
+        quizLoadingBox.setVisibility(loading ? View.VISIBLE : View.GONE);
+        if (loading) {
+            quizLoadingBox.setText(message);
+        }
+        createQuizButton.setEnabled(!loading);
+        createQuizButton.setText(loading ? buttonText : "퀴즈 생성하기");
     }
 
     private void bindSummaryData(String title, String subject,
@@ -148,9 +114,13 @@ public class SummaryResultActivity extends BaseActivity {
             for (String keyword : keywords) {
                 TextView chip = new TextView(this);
                 chip.setText("# " + keyword);
-                chip.setTextColor(getResources().getColor(R.color.study_text, null));
+                chip.setTextColor(getColor(R.color.study_text));
                 chip.setTextSize(16);
-                chip.setBackground(getResources().getDrawable(R.drawable.bg_chip, null));
+                chip.setBackground(ResourcesCompat.getDrawable(
+                        getResources(),
+                        R.drawable.bg_chip,
+                        getTheme()
+                ));
                 LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
                         LinearLayout.LayoutParams.WRAP_CONTENT,
                         LinearLayout.LayoutParams.WRAP_CONTENT
@@ -162,7 +132,7 @@ public class SummaryResultActivity extends BaseActivity {
         }
     }
 
-    // QuizItem 리스트를 JSON 문자열로 직렬화해서 QuizActivity에 전달
+    // QuizModel 리스트를 JSON 문자열로 직렬화해서 QuizActivity에 전달
     private String quizzesToJson(List<QuizModel> quizzes) {
         try {
             org.json.JSONArray arr = new org.json.JSONArray();

@@ -8,7 +8,6 @@ import com.google.android.gms.tasks.Tasks;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
-import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
@@ -120,7 +119,12 @@ public class AiService {
                         return;
                     }
                     String raw = response.body().string();
-                    SummaryResult result = parseSummary(raw);
+                    AiResponseParser.SummaryData parsed =
+                            AiResponseParser.parseSummary(raw);
+                    SummaryResult result = new SummaryResult(
+                            parsed.summary,
+                            parsed.keywords
+                    );
                     mainHandler.post(() -> callback.onSuccess(result));
                 }
             } catch (Exception e) {
@@ -172,7 +176,16 @@ public class AiService {
                         return;
                     }
                     String raw = response.body().string();
-                    List<QuizItem> quizzes = parseQuizzes(raw);
+                    List<QuizItem> quizzes = new ArrayList<>();
+                    for (AiResponseParser.QuizData parsed
+                            : AiResponseParser.parseQuizzes(raw)) {
+                        quizzes.add(new QuizItem(
+                                parsed.question,
+                                parsed.options,
+                                parsed.answerIndex,
+                                parsed.explanation
+                        ));
+                    }
                     mainHandler.post(() -> callback.onSuccess(quizzes));
                 }
             } catch (Exception e) {
@@ -180,68 +193,6 @@ public class AiService {
                 failOnMain(callback, "퀴즈 생성에 실패했습니다. 다시 시도해주세요.");
             }
         });
-    }
-
-    // ─── JSON 파싱 ────────────────────────────────────────────────
-
-    private SummaryResult parseSummary(String raw) throws Exception {
-        String json = extractJson(raw);
-        JSONObject obj = new JSONObject(json);
-
-        List<String> summary = toStringList(obj.getJSONArray("summary"));
-        List<String> keywords = toStringList(obj.getJSONArray("keywords"));
-
-        if (summary.size() < 3 || summary.size() > 5) {
-            throw new Exception("summary 필드는 3~5개여야 함");
-        }
-        if (keywords.size() != 3) {
-            throw new Exception("keywords 필드는 3개여야 함");
-        }
-        return new SummaryResult(summary, keywords);
-    }
-
-    private List<QuizItem> parseQuizzes(String raw) throws Exception {
-        String json = extractJson(raw);
-        JSONArray arr = new JSONArray(json);
-        List<QuizItem> quizzes = new ArrayList<>();
-
-        for (int i = 0; i < arr.length(); i++) {
-            JSONObject obj = arr.getJSONObject(i);
-            String question = obj.getString("question");
-            List<String> options = toStringList(obj.getJSONArray("options"));
-            int answerIndex = obj.getInt("answerIndex");
-            String explanation = obj.getString("explanation");
-
-            if (question.isEmpty() || options.size() != 4
-                    || answerIndex < 0 || answerIndex > 3
-                    || explanation.isEmpty()) {
-                Log.w(TAG, "퀴즈 항목 검증 실패, 건너뜀: index=" + i);
-                continue;
-            }
-            quizzes.add(new QuizItem(question, options, answerIndex, explanation));
-        }
-
-        if (quizzes.size() != 3) throw new Exception("유효한 퀴즈는 3개여야 함");
-        return quizzes;
-    }
-
-    // AI 응답에 설명 문장이 섞일 경우 JSON 블록만 추출
-    private String extractJson(String text) {
-        int objStart = text.indexOf('{');
-        int arrStart = text.indexOf('[');
-
-        if (objStart == -1 && arrStart == -1) return text;
-        if (objStart == -1) return text.substring(arrStart);
-        if (arrStart == -1) return text.substring(objStart);
-        return text.substring(Math.min(objStart, arrStart));
-    }
-
-    private List<String> toStringList(JSONArray arr) throws Exception {
-        List<String> list = new ArrayList<>();
-        for (int i = 0; i < arr.length(); i++) {
-            list.add(arr.getString(i));
-        }
-        return list;
     }
 
     // ─── 헬퍼 ────────────────────────────────────────────────────
@@ -287,6 +238,11 @@ public class AiService {
 
     private String invalidServerResponseMessage() {
         return "AI 서버 응답이 올바르지 않습니다. local.properties의 ai.base.url과 Functions 배포 상태를 확인해주세요.";
+    }
+
+    public void close() {
+        client.dispatcher().cancelAll();
+        executor.shutdownNow();
     }
 
     private void failOnMain(SummaryCallback callback, String message) {

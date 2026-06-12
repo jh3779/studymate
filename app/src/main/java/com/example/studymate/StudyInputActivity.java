@@ -10,11 +10,9 @@ import android.widget.TextView;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.lifecycle.ViewModelProvider;
 
-import com.example.studymate.model.StudyNoteModel;
-import com.example.studymate.service.AiService;
-import com.example.studymate.service.AuthService;
-import com.example.studymate.service.FirestoreService;
+import com.example.studymate.validation.StudyInputValidator;
 import com.google.mlkit.vision.common.InputImage;
 import com.google.mlkit.vision.text.TextRecognition;
 import com.google.mlkit.vision.text.TextRecognizer;
@@ -24,7 +22,6 @@ import com.tom_roush.pdfbox.pdmodel.PDDocument;
 import com.tom_roush.pdfbox.text.PDFTextStripper;
 
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -40,12 +37,10 @@ public class StudyInputActivity extends BaseActivity {
     private Button importPdfButton;
     private Button importImageButton;
 
-    private final AiService aiService = new AiService();
-    private final AuthService authService = new AuthService();
-    private final FirestoreService firestoreService = new FirestoreService();
     private final ExecutorService importExecutor = Executors.newSingleThreadExecutor();
     private ActivityResultLauncher<String[]> pdfPickerLauncher;
     private ActivityResultLauncher<String[]> imagePickerLauncher;
+    private StudyInputViewModel viewModel;
     private boolean loading;
     private boolean importing;
 
@@ -65,6 +60,8 @@ public class StudyInputActivity extends BaseActivity {
         generateButton = findViewById(R.id.generateSummaryButton);
         importPdfButton = findViewById(R.id.importPdfButton);
         importImageButton = findViewById(R.id.importImageButton);
+        viewModel = new ViewModelProvider(this).get(StudyInputViewModel.class);
+        viewModel.getState().observe(this, this::renderOperationState);
 
         bindClick(R.id.backHome, v -> finish());
         bindClick(R.id.generateSummaryButton, v -> handleGenerateSummary());
@@ -98,93 +95,72 @@ public class StudyInputActivity extends BaseActivity {
         String subject = subjectInput.getText().toString().trim();
         String content = contentInput.getText().toString().trim();
 
-        if (title.isEmpty()) {
-            showError("⚠ 제목을 입력해주세요.");
-            return;
-        }
-        if (content.length() < 30) {
-            showError("⚠ 학습 내용은 30자 이상 입력해주세요. 현재 " + content.length() + "자입니다.");
-            return;
-        }
-        if (content.length() > 5000) {
-            showError("⚠ 학습 내용은 5000자 이하로 입력해주세요. 현재 " + content.length() + "자입니다.");
+        StudyInputValidator.ValidationResult validation =
+                StudyInputValidator.validate(title, content);
+        if (!validation.isValid()) {
+            showError("⚠ " + validation.getMessage());
             return;
         }
 
         errorText.setVisibility(View.GONE);
-        setLoading(true);
-
-        aiService.generateSummary(content, new AiService.SummaryCallback() {
-            @Override
-            public void onSuccess(AiService.SummaryResult result) {
-                saveStudyNote(title, subject, content, result);
-            }
-
-            @Override
-            public void onFailure(String errorMessage) {
-                setLoading(false);
-                showError("⚠ " + errorMessage);
-            }
-        });
+        viewModel.generateSummary(title, subject, content);
     }
 
-    private void saveStudyNote(
-            String title,
-            String subject,
-            String content,
-            AiService.SummaryResult result
-    ) {
-        String userId = authService.getCurrentUserId();
-        if (userId == null) {
-            setLoading(false);
-            showError("⚠ 로그인이 만료되었습니다. 다시 로그인해주세요.");
-            return;
-        }
-
-        loadingBox.setText("⏳ 학습 기록 저장 중...\n잠시만 기다려주세요");
-        generateButton.setText("학습 기록 저장 중...");
-
-        StudyNoteModel note = new StudyNoteModel(
-                null,
-                userId,
-                title,
-                subject,
-                content,
-                result.summary,
-                result.keywords,
-                null
-        );
-
-        firestoreService.saveStudyNote(note, new FirestoreService.SaveCallback() {
-            @Override
-            public void onSuccess(String documentId) {
+    private void renderOperationState(StudyInputViewModel.State state) {
+        switch (state.status) {
+            case GENERATING:
+                setLoading(
+                        true,
+                        "⏳ AI 요약 생성 중...\n잠시만 기다려주세요",
+                        "AI 요약 생성 중..."
+                );
+                break;
+            case SAVING:
+                setLoading(
+                        true,
+                        "⏳ 학습 기록 저장 중...\n잠시만 기다려주세요",
+                        "학습 기록 저장 중..."
+                );
+                break;
+            case SUCCESS:
                 setLoading(false);
-
+                StudyInputViewModel.Result result = state.result;
+                viewModel.consumeSuccess();
                 Intent intent = new Intent(StudyInputActivity.this, SummaryResultActivity.class);
-                intent.putExtra("noteId", documentId);
-                intent.putExtra("title", title);
-                intent.putExtra("subject", subject);
-                intent.putExtra("content", content);
-                intent.putStringArrayListExtra("summary", new ArrayList<>(result.summary));
-                intent.putStringArrayListExtra("keywords", new ArrayList<>(result.keywords));
+                intent.putExtra("noteId", result.noteId);
+                intent.putExtra("title", result.title);
+                intent.putExtra("subject", result.subject);
+                intent.putExtra("content", result.content);
+                intent.putStringArrayListExtra("summary", result.summary);
+                intent.putStringArrayListExtra("keywords", result.keywords);
                 startActivity(intent);
-            }
-
-            @Override
-            public void onFailure(String errorMessage) {
+                break;
+            case ERROR:
                 setLoading(false);
-                showError("⚠ 요약은 생성됐지만 저장에 실패했습니다. " + errorMessage);
-            }
-        });
+                showError("⚠ " + state.errorMessage);
+                break;
+            case IDLE:
+            default:
+                setLoading(false);
+                break;
+        }
     }
 
     private void setLoading(boolean loading) {
+        setLoading(
+                loading,
+                "⏳ AI 요약 생성 중...\n잠시만 기다려주세요",
+                "AI 요약 생성 중..."
+        );
+    }
+
+    private void setLoading(boolean loading, String loadingText, String buttonText) {
         this.loading = loading;
         loadingBox.setVisibility(loading ? View.VISIBLE : View.GONE);
-        if (!loading) {
-            loadingBox.setText("⏳ AI 요약 생성 중...\n잠시만 기다려주세요");
-        }
-        generateButton.setText(loading ? "AI 요약 생성 중..." : "AI 요약 생성");
+        loadingBox.setText(loading
+                ? loadingText
+                : "⏳ AI 요약 생성 중...\n잠시만 기다려주세요");
+        generateButton.setText(loading ? buttonText : "AI 요약 생성");
         updateInputEnabledState();
     }
 

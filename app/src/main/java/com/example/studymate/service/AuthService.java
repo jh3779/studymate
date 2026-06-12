@@ -10,6 +10,8 @@ import com.google.firebase.auth.FirebaseAuthInvalidUserException;
 import com.google.firebase.auth.FirebaseAuthUserCollisionException;
 import com.google.firebase.auth.FirebaseUser;
 
+import java.util.Locale;
+
 public class AuthService {
     private static final String TAG = "AuthService";
 
@@ -133,7 +135,7 @@ public class AuthService {
 
         String detail = error.getMessage();
         if (detail != null) {
-            String normalizedDetail = detail.toLowerCase();
+            String normalizedDetail = detail.toLowerCase(Locale.ROOT);
             if (normalizedDetail.contains("api key")
                     || normalizedDetail.contains("blocked")
                     || normalizedDetail.contains("configuration_not_found")) {

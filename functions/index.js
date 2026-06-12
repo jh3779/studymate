@@ -4,6 +4,7 @@ const express = require("express");
 const OpenAI = require("openai");
 const admin = require("firebase-admin");
 const { createVerifyAuth } = require("./authMiddleware");
+const { createAiRateLimiter } = require("./rateLimit");
 
 if (!admin.apps.length) admin.initializeApp();
 
@@ -30,6 +31,7 @@ app.get("/health", (req, res) => {
 
 const verifyAuth = createVerifyAuth(admin);
 app.use(verifyAuth);
+app.use(createAiRateLimiter(admin));
 
 // ─── 프롬프트 ────────────────────────────────────────────────────────────────
 
@@ -180,6 +182,8 @@ exports.api = onRequest(
     region: "asia-northeast3",
     secrets: [openaiApiKey],
     timeoutSeconds: 120,
+    maxInstances: 3,
+    concurrency: 20,
   },
   app
 );

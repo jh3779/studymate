@@ -3,6 +3,7 @@ package com.example.studymate;
 import android.content.Intent;
 import android.os.Bundle;
 import android.widget.Button;
+import android.widget.RadioButton;
 import android.widget.TextView;
 import com.example.studymate.model.QuizModel;
 import org.json.JSONArray;
@@ -22,7 +23,7 @@ public class QuizActivity extends BaseActivity {
     private ArrayList<QuizModel> quizList = new ArrayList<>();
     private TextView progressText;
     private TextView questionText;
-    private TextView[] optionViews;
+    private RadioButton[] optionViews;
     private Button nextButton;
 
     private int currentIndex = 0;
@@ -39,7 +40,7 @@ public class QuizActivity extends BaseActivity {
 
         progressText = findViewById(R.id.quizProgressText);
         questionText = findViewById(R.id.questionText);
-        optionViews = new TextView[]{
+        optionViews = new RadioButton[]{
                 findViewById(R.id.optionOne),
                 findViewById(R.id.optionTwo),
                 findViewById(R.id.optionThree),
@@ -145,9 +146,9 @@ public class QuizActivity extends BaseActivity {
     private void updateOptionAccessibility(int index, boolean selected) {
         String optionText = optionViews[index].getText().toString();
         optionViews[index].setSelected(selected);
+        optionViews[index].setChecked(selected);
         optionViews[index].setContentDescription(
-                "보기 " + (index + 1) + ". " + optionText + ". "
-                        + (selected ? "선택됨" : "선택 안 됨")
+                "보기 " + (index + 1) + ". " + optionText
         );
     }
 

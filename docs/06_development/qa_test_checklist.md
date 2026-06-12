@@ -22,14 +22,17 @@ git pull --ff-only origin main
 | AUTO-003 | Android 단위 테스트 | `JAVA_HOME=/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home ANDROID_HOME=/Users/jihun/Library/Android/sdk ./gradlew --no-daemon testDebugUnitTest` | `BUILD SUCCESSFUL` | 통과 |
 | AUTO-004 | Firestore 보안 규칙 테스트 | `npm --prefix tests/firestore-rules ci` 후 `npm run test:firestore-rules` | 전체 테스트 통과 | 통과 |
 | AUTO-005 | Firestore rules 의존성 감사 | `npm run audit:firestore-rules` | 취약점 없음 또는 허용 기준 이하 | 통과 |
+| AUTO-006 | Functions 인증/호출 제한 테스트 | `npm --prefix functions test` | 전체 테스트 통과 | 통과 |
 
 최근 확인 결과:
 
 - `assembleDebug`: 통과
 - `lintDebug`: 통과
 - `testDebugUnitTest`: 통과
+- Android 핵심 로직 단위 테스트: `11 pass / 0 fail`
 - Firestore rules: `11 pass / 0 fail`
 - Firestore rules 의존성 감사: `0 vulnerabilities`
+- Functions 인증/호출 제한: `8 pass / 0 fail`
 
 자동 검증은 코드와 보안 규칙의 최소 안정성을 확인한다. Firebase Auth, Functions 배포 URL, 실제 기기 네트워크, 이메일 인증 상태가 필요한 항목은 아래 수동 QA에서 별도로 최종 확인한다.
 
@@ -90,9 +93,9 @@ git pull --ff-only origin main
 | QA-004 | 학습 입력 | Medium | 제목 없이 요약 생성을 시도한다. | 제목 입력 안내가 표시된다. | 윤재이 | 미확인 |
 | QA-005 | 학습 입력 | Medium | 학습 내용 30자 미만으로 요약 생성을 시도한다. | AI 요청이 차단되고 입력 부족 안내가 표시된다. | 윤재이 | 구현 확인 |
 | QA-006 | 학습 입력 | Medium | 학습 내용 5000자 초과로 요약 생성을 시도한다. | AI 요청이 차단되고 길이 초과 안내가 표시된다. | 윤재이 | 구현 확인 |
-| QA-007 | AI 요약 | High | 정상 학습 내용을 입력해 요약을 생성한다. | SummaryResultScreen에 요약과 키워드가 표시된다. | 윤재이 | 미확인 |
+| QA-007 | AI 요약 | High | 정상 학습 내용을 입력해 요약을 생성한다. | SummaryResultScreen에 요약과 키워드가 표시된다. | 윤재이 | Functions E2E 통과 / 실기기 미확인 |
 | QA-008 | AI 오류 | Medium | AI 요약 요청 중 네트워크/API 실패를 발생시킨다. | 로딩이 종료되고 오류 메시지가 표시되며 입력값이 유지된다. | 윤재이 | 미확인 |
-| QA-009 | 퀴즈 생성 | High | SummaryResultScreen에서 퀴즈 생성을 실행한다. | QuizScreen에 4지선다 문제 3개가 표시된다. | 강도현 | 미확인 |
+| QA-009 | 퀴즈 생성 | High | SummaryResultScreen에서 퀴즈 생성을 실행한다. | QuizScreen에 4지선다 문제 3개가 표시된다. | 강도현 | Functions E2E 통과 / 실기기 미확인 |
 | QA-010 | 퀴즈 풀이 | Medium | 보기를 선택하지 않은 상태를 확인한다. | 다음 버튼이 비활성화되어 이동하지 않는다. | 강도현 | 구현 확인 |
 | QA-011 | 퀴즈 풀이 | High | 각 문제에서 보기를 선택한 뒤 다음 문제로 이동한다. | 진행도와 문제/보기가 정상 갱신된다. | 강도현 | 미확인 |
 | QA-012 | 결과 | High | 3문제 중 일부를 틀린다. | 정답률, 틀린 문제 수, 저장 중/성공 상태가 표시된다. | 강도현 | 미확인 |
@@ -104,6 +107,7 @@ git pull --ff-only origin main
 | QA-018 | 마이페이지 | Medium | MyPageScreen으로 이동한다. | 사용자 이메일과 로그아웃 동선이 확인된다. | 우지훈 / 최백도 | 구현 확인 / 실기기 미확인 |
 | QA-019 | 접근성 | Low | 시스템 글자 크기를 크게 설정하고 주요 화면을 확인한다. | 버튼, 카드, 요약, 해설 텍스트가 잘리지 않고 스크롤 가능하다. | 우지훈 | 미확인 |
 | QA-020 | 접근성 | Low | 스크린리더로 QuizScreen을 탐색한다. | 문제, 보기 번호, 선택 상태, 다음 버튼이 의미 있게 읽힌다. | 우지훈 | 미확인 |
+| QA-021 | 화면 회전 | Medium | AI 요약 또는 퀴즈 생성 중 화면을 회전한다. | 요청이 중복 실행되지 않고 로딩 상태와 완료 결과가 유지된다. | 윤재이 / 강도현 | 구현 확인 / 실기기 미확인 |
 
 ## 5. 시연 준비 체크리스트
 
@@ -111,7 +115,7 @@ git pull --ff-only origin main
 | --- | --- | --- | --- |
 | DEMO-001 | 발표용 계정 | 이메일 인증 완료 계정 1개 | 미확인 |
 | DEMO-002 | 시연용 입력 데이터 | 30자 이상, 1~2문단 수준 | 준비됨 |
-| DEMO-003 | AI API 호출 환경 | 네트워크와 Functions/API Key 정상 | 미확인 |
+| DEMO-003 | AI API 호출 환경 | 네트워크와 Functions/API Key 정상 | 검증됨 (2026-06-12) |
 | DEMO-004 | 일부러 틀릴 문제 | 오답노트 저장 시연용 문제 1개 이상 | 미확인 |
 | DEMO-005 | API 실패 대비 절차 | 오류 안내와 재시도 절차 | 미확인 |
 | DEMO-006 | Firebase 데이터 초기화 | 발표 전 테스트 데이터 정리 | 미확인 |
@@ -145,8 +149,9 @@ git pull --ff-only origin main
 
 발표 전 완료 기준은 다음과 같다.
 
-- 자동 검증 `AUTO-001`부터 `AUTO-004`까지 모두 통과한다.
+- 자동 검증 `AUTO-001`부터 `AUTO-006`까지 모두 통과한다.
 - `QA-001`부터 `QA-018`까지 수동 테스트 결과가 통과 또는 허용 가능한 이슈로 정리된다.
 - `QA-019`, `QA-020` 접근성 항목은 최소 1회 이상 확인하고, 치명적인 잘림/탐색 불가 문제가 없어야 한다.
+- `QA-021` AI 요청 중 화면 회전을 최소 1회 확인하고 중복 요청이 없어야 한다.
 - `DEMO-001`부터 `DEMO-006`까지 시연 준비가 완료된다.
 - High 심각도 결함이 남아 있지 않다.

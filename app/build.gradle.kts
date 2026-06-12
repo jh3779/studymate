@@ -100,6 +100,7 @@ dependencies {
     implementation(libs.mlkit.text.recognition.korean)
     implementation(libs.pdfbox.android)
     testImplementation(libs.junit)
+    testImplementation("org.json:json:20240303")
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
 }

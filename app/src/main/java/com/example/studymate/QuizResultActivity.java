@@ -9,6 +9,7 @@ import com.example.studymate.model.QuizModel;
 import com.example.studymate.model.QuizResultModel;
 import com.example.studymate.model.WrongAnswerModel;
 import com.example.studymate.service.FirestoreService;
+import com.example.studymate.util.QuizScoring;
 import com.google.firebase.auth.FirebaseAuth;
 import java.util.ArrayList;
 import java.util.List;
@@ -51,8 +52,8 @@ public class QuizResultActivity extends BaseActivity {
             quizList = receivedQuizList;
         }
 
-        int wrongCount = totalCount - correctCount;
-        int score = totalCount == 0 ? 0 : Math.round((correctCount * 100f) / totalCount);
+        int wrongCount = QuizScoring.wrongCount(correctCount, totalCount);
+        int score = QuizScoring.scorePercent(correctCount, totalCount);
 
         TextView scoreCircle = findViewById(R.id.scoreCircle);
         TextView summaryText = findViewById(R.id.resultSummaryText);
