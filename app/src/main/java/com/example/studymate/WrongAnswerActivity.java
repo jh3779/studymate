@@ -15,6 +15,7 @@ import com.example.studymate.model.StudyNoteModel;
 import com.example.studymate.model.WrongAnswerModel;
 import com.example.studymate.service.AuthService;
 import com.example.studymate.service.FirestoreService;
+import com.example.studymate.util.QuizAttemptEvaluator;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -86,11 +87,9 @@ public class WrongAnswerActivity extends BaseActivity {
         // 실데이터 검증을 기반으로 한 런타임 오답 선별 처리
         if (userAnswers != null && !userAnswers.isEmpty() && !quizList.isEmpty()) {
             wrongIndices.clear();
-            for (int i = 0; i < quizList.size(); i++) {
-                if (i < userAnswers.size() && userAnswers.get(i) != quizList.get(i).getAnswerIndex()) {
-                    wrongIndices.add(i);
-                }
-            }
+            wrongIndices.addAll(
+                    QuizAttemptEvaluator.wrongQuestionIndices(quizList, userAnswers)
+            );
         }
 
         if (userAnswers != null && !userAnswers.isEmpty() && !quizList.isEmpty()) {

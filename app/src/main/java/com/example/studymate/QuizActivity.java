@@ -5,10 +5,15 @@ import android.os.Bundle;
 import android.widget.Button;
 import android.widget.RadioButton;
 import android.widget.TextView;
+
+import androidx.core.view.ViewCompat;
+
 import com.example.studymate.model.QuizModel;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -75,7 +80,7 @@ public class QuizActivity extends BaseActivity {
 
         if (isValidQuizList()) {
             restoreState(savedInstanceState);
-            renderQuestion();
+            renderQuestion(false);
         } else {
             showShortToast("퀴즈 데이터를 불러오지 못했습니다.");
             finish();
@@ -127,13 +132,24 @@ public class QuizActivity extends BaseActivity {
         }
     }
 
-    private void renderQuestion() {
+    private void renderQuestion(boolean announceQuestion) {
         nextButton.setEnabled(selectedIndex >= 0);
 
         QuizModel currentQuiz = quizList.get(currentIndex);
         nextButton.setText(currentIndex == quizList.size() - 1 ? "결과 보기" : "다음 문제");
         progressText.setText((currentIndex + 1) + "/" + quizList.size());
+        progressText.setContentDescription(getString(
+                R.string.quiz_progress_accessibility,
+                currentIndex + 1,
+                quizList.size()
+        ));
         questionText.setText(currentQuiz.getQuestion());
+        questionText.setContentDescription(getString(
+                R.string.quiz_question_accessibility,
+                currentIndex + 1,
+                currentQuiz.getQuestion()
+        ));
+        ViewCompat.setAccessibilityHeading(questionText, true);
 
         for (int i = 0; i < optionViews.length; i++) {
             if (i < currentQuiz.getOptions().size()) {
@@ -145,6 +161,14 @@ public class QuizActivity extends BaseActivity {
                 updateOptionAccessibility(i, selected);
             }
         }
+        updateNextButtonAccessibility();
+
+        if (announceQuestion) {
+            questionText.announceForAccessibility(
+                    progressText.getContentDescription() + ". "
+                            + questionText.getContentDescription()
+            );
+        }
     }
 
     private void selectOption(int index) {
@@ -154,14 +178,32 @@ public class QuizActivity extends BaseActivity {
             optionViews[i].setBackgroundResource(i == index ? R.drawable.bg_option_selected : R.drawable.bg_option);
             updateOptionAccessibility(i, i == index);
         }
+        updateNextButtonAccessibility();
     }
 
     private void updateOptionAccessibility(int index, boolean selected) {
         String optionText = optionViews[index].getText().toString();
         optionViews[index].setSelected(selected);
         optionViews[index].setChecked(selected);
-        optionViews[index].setContentDescription(
-                "보기 " + (index + 1) + ". " + optionText
+        optionViews[index].setContentDescription(getString(
+                R.string.quiz_option_accessibility,
+                index + 1,
+                optionText
+        ));
+        ViewCompat.setStateDescription(
+                optionViews[index],
+                getString(selected
+                        ? R.string.quiz_option_selected
+                        : R.string.quiz_option_not_selected)
+        );
+    }
+
+    private void updateNextButtonAccessibility() {
+        ViewCompat.setStateDescription(
+                nextButton,
+                getString(nextButton.isEnabled()
+                        ? R.string.quiz_next_enabled
+                        : R.string.quiz_next_disabled)
         );
     }
 
@@ -198,7 +240,6 @@ public class QuizActivity extends BaseActivity {
             correctCount++;
         }
 
-        // 지훈이 피드백 반영: 중복 코드 및 questions.length 참조 완전 박멸 완료
         if (currentIndex == quizList.size() - 1) {
             Intent intent = new Intent(this, QuizResultActivity.class);
             intent.putExtra("correctCount", correctCount);
@@ -214,7 +255,7 @@ public class QuizActivity extends BaseActivity {
 
         currentIndex++;
         selectedIndex = -1;
-        renderQuestion();
+        renderQuestion(true);
     }
 
     @Override

@@ -9,6 +9,7 @@ import com.example.studymate.model.QuizModel;
 import com.example.studymate.model.QuizResultModel;
 import com.example.studymate.model.WrongAnswerModel;
 import com.example.studymate.service.FirestoreService;
+import com.example.studymate.util.QuizAttemptEvaluator;
 import com.example.studymate.util.QuizScoring;
 import com.google.firebase.auth.FirebaseAuth;
 import java.util.ArrayList;
@@ -119,16 +120,7 @@ public class QuizResultActivity extends BaseActivity {
     }
 
     private int countCorrectAnswers() {
-        int correctAnswers = 0;
-        for (int i = 0; i < quizList.size(); i++) {
-            if (i >= userAnswers.size() || userAnswers.get(i) == null) {
-                continue;
-            }
-            if (userAnswers.get(i) == quizList.get(i).getAnswerIndex()) {
-                correctAnswers++;
-            }
-        }
-        return correctAnswers;
+        return QuizAttemptEvaluator.countCorrect(quizList, userAnswers);
     }
 
     private void saveOutcomeToFirestore(
@@ -160,28 +152,23 @@ public class QuizResultActivity extends BaseActivity {
 
     private List<WrongAnswerModel> buildWrongAnswers(String userId) {
         List<WrongAnswerModel> wrongAnswers = new ArrayList<>();
-        for (int i = 0; i < quizList.size(); i++) {
-            if (i < userAnswers.size()) {
-                QuizModel quiz = quizList.get(i);
-                int userSelected = userAnswers.get(i);
-                if (userSelected != quiz.getAnswerIndex()) {
-                    if (quiz.getId() == null || quiz.getId().trim().isEmpty()) {
-                        continue;
-                    }
-                    wrongAnswers.add(new WrongAnswerModel(
-                            null,
-                            userId,
-                            quiz.getId(),
-                            noteId,
-                            userSelected,
-                            quiz.getAnswerIndex(),
-                            quiz.getQuestion(),
-                            quiz.getOptions(),
-                            quiz.getExplanation(),
-                            null
-                    ));
-                }
+        for (int index : QuizAttemptEvaluator.wrongQuestionIndices(quizList, userAnswers)) {
+            QuizModel quiz = quizList.get(index);
+            if (quiz.getId() == null || quiz.getId().trim().isEmpty()) {
+                continue;
             }
+            wrongAnswers.add(new WrongAnswerModel(
+                    null,
+                    userId,
+                    quiz.getId(),
+                    noteId,
+                    userAnswers.get(index),
+                    quiz.getAnswerIndex(),
+                    quiz.getQuestion(),
+                    quiz.getOptions(),
+                    quiz.getExplanation(),
+                    null
+            ));
         }
         return wrongAnswers;
     }
