@@ -29,10 +29,10 @@ git pull --ff-only origin main
 - `assembleDebug`: 통과
 - `lintDebug`: 통과
 - `testDebugUnitTest`: 통과
-- Android 핵심 로직 단위 테스트: `14 pass / 0 fail`
+- Android 핵심 로직 단위 테스트: `15 pass / 0 fail`
 - Firestore rules: `12 pass / 0 fail`
 - Firestore rules 의존성 감사: `0 vulnerabilities`
-- Functions 인증/호출 제한: `8 pass / 0 fail`
+- Functions 인증/호출 제한 및 응답 검증: `12 pass / 0 fail`
 
 자동 검증은 코드와 보안 규칙의 최소 안정성을 확인한다. Firebase Auth, Functions 배포 URL, 실제 기기 네트워크, 이메일 인증 상태가 필요한 항목은 아래 수동 QA에서 별도로 최종 확인한다.
 

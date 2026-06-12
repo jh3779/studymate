@@ -67,4 +67,21 @@ public class AiResponseParserTest {
                 )
         );
     }
+
+    @Test
+    public void rejectsQuizWithFractionalAnswerIndex() {
+        String quiz = "{"
+                + "\"question\":\"질문\","
+                + "\"options\":[\"1\",\"2\",\"3\",\"4\"],"
+                + "\"answerIndex\":1.5,"
+                + "\"explanation\":\"해설\""
+                + "}";
+
+        assertThrows(
+                Exception.class,
+                () -> AiResponseParser.parseQuizzes(
+                        "[" + quiz + "," + quiz + "," + quiz + "]"
+                )
+        );
+    }
 }

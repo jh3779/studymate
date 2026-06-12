@@ -11,7 +11,6 @@ import android.widget.TextView;
 
 import com.example.studymate.model.QuizResultModel;
 import com.example.studymate.model.StudyNoteModel;
-import com.example.studymate.model.UserStatsModel;
 import com.example.studymate.service.AuthService;
 import com.example.studymate.service.FirestoreService;
 
@@ -34,6 +33,7 @@ public class HomeActivity extends BaseActivity {
     private TextView homeStatsStatusText;
     private TextView emptyRecentNotesText;
     private LinearLayout recentNotesContainer;
+    private int homeLoadGeneration;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,6 +60,7 @@ public class HomeActivity extends BaseActivity {
     }
 
     private void loadHomeData() {
+        int loadGeneration = ++homeLoadGeneration;
         showHomeLoading();
         String userId = authService.getCurrentUserId();
         if (userId == null) {
@@ -67,50 +68,64 @@ public class HomeActivity extends BaseActivity {
             return;
         }
 
-        firestoreService.getUserStats(userId, new FirestoreService.StatsCallback() {
+        firestoreService.getHomeData(userId, new FirestoreService.HomeDataCallback() {
             @Override
-            public void onSuccess(UserStatsModel stats) {
-                totalStudyStatText.setText(stats.getStudyNoteCount() + "\n총 학습");
-                quizCountStatText.setText(stats.getQuizResultCount() + "\n퀴즈 풀이");
-                averageScoreStatText.setText(stats.getAverageScore() + "%\n평균 정답률");
-                homeStatsStatusText.setVisibility(View.GONE);
-            }
-
-            @Override
-            public void onFailure(String errorMessage) {
-                showStatsError(errorMessage);
-            }
-        });
-
-        firestoreService.getStudyNotes(userId, new FirestoreService.ListCallback<StudyNoteModel>() {
-            @Override
-            public void onSuccess(List<StudyNoteModel> notes) {
-                loadRecentNoteScores(userId, notes);
-            }
-
-            @Override
-            public void onFailure(String errorMessage) {
-                showRecentNotesError(errorMessage);
-            }
-        });
-    }
-
-    private void loadRecentNoteScores(String userId, List<StudyNoteModel> notes) {
-        firestoreService.getQuizResults(userId, new FirestoreService.ListCallback<QuizResultModel>() {
-            @Override
-            public void onSuccess(List<QuizResultModel> results) {
+            public void onSuccess(
+                    List<StudyNoteModel> notes,
+                    List<QuizResultModel> results
+            ) {
+                if (loadGeneration != homeLoadGeneration) {
+                    return;
+                }
+                renderStats(notes.size(), results);
                 renderRecentNotes(notes, latestScoresByNote(results));
             }
 
             @Override
-            public void onFailure(String errorMessage) {
+            public void onStudyNotesOnly(
+                    List<StudyNoteModel> notes,
+                    String errorMessage
+            ) {
+                if (loadGeneration != homeLoadGeneration) {
+                    return;
+                }
+                showQuizStatsError(notes.size(), errorMessage);
                 renderRecentNotes(notes, new HashMap<>());
                 showRecentStatus(
                         "정답률을 불러오지 못했습니다. 눌러서 다시 시도해주세요.",
                         true
                 );
             }
+
+            @Override
+            public void onFailure(String errorMessage) {
+                if (loadGeneration != homeLoadGeneration) {
+                    return;
+                }
+                showRecentNotesError(errorMessage);
+                showAllStatsError(errorMessage);
+            }
         });
+    }
+
+    private void renderStats(int studyNoteCount, List<QuizResultModel> results) {
+        int quizResultCount = results == null ? 0 : results.size();
+        int totalScore = 0;
+        if (results != null) {
+            for (QuizResultModel result : results) {
+                if (result != null) {
+                    totalScore += result.getScore();
+                }
+            }
+        }
+        int averageScore = quizResultCount == 0
+                ? 0
+                : Math.round((float) totalScore / quizResultCount);
+
+        totalStudyStatText.setText(studyNoteCount + "\n총 학습");
+        quizCountStatText.setText(quizResultCount + "\n퀴즈 풀이");
+        averageScoreStatText.setText(averageScore + "%\n평균 정답률");
+        homeStatsStatusText.setVisibility(View.GONE);
     }
 
     private void showHomeLoading() {
@@ -136,10 +151,21 @@ public class HomeActivity extends BaseActivity {
         showRecentStatus("로그인 사용자 정보를 확인할 수 없습니다.", false);
     }
 
-    private void showStatsError(String errorMessage) {
+    private void showAllStatsError(String errorMessage) {
         totalStudyStatText.setText("-\n총 학습");
         quizCountStatText.setText("-\n퀴즈 풀이");
         averageScoreStatText.setText("-\n평균 정답률");
+        showStatsRetry(errorMessage);
+    }
+
+    private void showQuizStatsError(int studyNoteCount, String errorMessage) {
+        totalStudyStatText.setText(studyNoteCount + "\n총 학습");
+        quizCountStatText.setText("-\n퀴즈 풀이");
+        averageScoreStatText.setText("-\n평균 정답률");
+        showStatsRetry(errorMessage);
+    }
+
+    private void showStatsRetry(String errorMessage) {
         homeStatsStatusText.setText(errorMessage + "\n눌러서 다시 시도해주세요.");
         homeStatsStatusText.setTextColor(getColor(R.color.study_error));
         homeStatsStatusText.setClickable(true);

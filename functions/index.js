@@ -5,6 +5,10 @@ const OpenAI = require("openai");
 const admin = require("firebase-admin");
 const { createVerifyAuth } = require("./authMiddleware");
 const { createAiRateLimiter } = require("./rateLimit");
+const {
+  isValidQuiz,
+  isValidSummaryResult,
+} = require("./responseValidation");
 
 if (!admin.apps.length) admin.initializeApp();
 
@@ -113,11 +117,8 @@ app.post("/summary", async (req, res) => {
 
     const result = JSON.parse(completion.choices[0].message.content);
 
-    if (!Array.isArray(result.summary) || result.summary.length < 3 || result.summary.length > 5) {
+    if (!isValidSummaryResult(result)) {
       return res.status(500).json({ error: "summary 응답이 올바르지 않습니다." });
-    }
-    if (!Array.isArray(result.keywords) || result.keywords.length !== 3) {
-      return res.status(500).json({ error: "keywords 응답이 올바르지 않습니다." });
     }
 
     return res.status(200).json(result);
@@ -154,13 +155,7 @@ app.post("/quiz", async (req, res) => {
       return res.status(500).json({ error: "퀴즈 응답이 올바르지 않습니다." });
     }
 
-    const valid = quizzes.filter(
-      (q) =>
-        q.question && q.question.length > 0 &&
-        Array.isArray(q.options) && q.options.length === 4 &&
-        typeof q.answerIndex === "number" && q.answerIndex >= 0 && q.answerIndex <= 3 &&
-        q.explanation && q.explanation.length > 0
-    );
+    const valid = quizzes.filter(isValidQuiz);
 
     if (valid.length !== 3) {
       return res.status(500).json({ error: "유효한 퀴즈가 없습니다." });

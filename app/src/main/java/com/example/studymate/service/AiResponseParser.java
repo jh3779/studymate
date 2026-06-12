@@ -32,7 +32,7 @@ public final class AiResponseParser {
             JSONObject object = array.getJSONObject(i);
             String question = object.getString("question").trim();
             List<String> options = toStringList(object.getJSONArray("options"));
-            int answerIndex = object.getInt("answerIndex");
+            int answerIndex = toAnswerIndex(object.get("answerIndex"));
             String explanation = object.getString("explanation").trim();
 
             if (question.isEmpty()
@@ -49,6 +49,17 @@ public final class AiResponseParser {
             throw new Exception("유효한 퀴즈는 3개여야 함");
         }
         return quizzes;
+    }
+
+    private static int toAnswerIndex(Object rawValue) throws Exception {
+        if (!(rawValue instanceof Number)) {
+            throw new Exception("answerIndex는 숫자여야 함");
+        }
+        double numericValue = ((Number) rawValue).doubleValue();
+        if (!Double.isFinite(numericValue) || numericValue != Math.rint(numericValue)) {
+            throw new Exception("answerIndex는 정수여야 함");
+        }
+        return (int) numericValue;
     }
 
     static String extractJson(String text) {

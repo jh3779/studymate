@@ -2,6 +2,7 @@
     <!-- Base application theme. -->
     <style name="Base.Theme.StudyMate" parent="Theme.Material3.DayNight.NoActionBar">
         <item name="android:fontFamily">sans-serif</item>
+        <item name="android:windowBackground">@color/study_bg</item>
         <item name="android:windowLightStatusBar">false</item>
         <item name="android:statusBarColor">@color/study_bg</item>
         <item name="android:navigationBarColor">@color/study_bg</item>

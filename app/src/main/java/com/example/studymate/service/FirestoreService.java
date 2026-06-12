@@ -59,6 +59,20 @@ public class FirestoreService {
         void onFailure(String errorMessage);
     }
 
+    public interface HomeDataCallback {
+        void onSuccess(
+                List<StudyNoteModel> studyNotes,
+                List<QuizResultModel> quizResults
+        );
+
+        void onStudyNotesOnly(
+                List<StudyNoteModel> studyNotes,
+                String errorMessage
+        );
+
+        void onFailure(String errorMessage);
+    }
+
     public interface DeleteCallback {
         void onSuccess();
 
@@ -180,6 +194,58 @@ public class FirestoreService {
         document.set(withCreatedAt(result.toMap()))
                 .addOnSuccessListener(unused -> callback.onSuccess(document.getId()))
                 .addOnFailureListener(error -> callback.onFailure(toUserMessage(error)));
+    }
+
+    public void getHomeData(String userId, HomeDataCallback callback) {
+        if (isBlank(userId)) {
+            callback.onFailure("로그인 사용자 정보를 확인할 수 없습니다.");
+            return;
+        }
+
+        com.google.android.gms.tasks.Task<QuerySnapshot> studyNotesTask =
+                firestore.collection(STUDY_NOTES)
+                        .whereEqualTo("userId", userId)
+                        .orderBy("createdAt", Query.Direction.DESCENDING)
+                        .get();
+        com.google.android.gms.tasks.Task<QuerySnapshot> quizResultsTask =
+                firestore.collection(QUIZ_RESULTS)
+                        .whereEqualTo("userId", userId)
+                        .get();
+
+        Tasks.whenAllComplete(studyNotesTask, quizResultsTask)
+                .addOnSuccessListener(unused -> {
+                    if (!studyNotesTask.isSuccessful()) {
+                        callback.onFailure(toUserMessage(studyNotesTask.getException()));
+                        return;
+                    }
+
+                    QuerySnapshot studyNoteSnapshot = studyNotesTask.getResult();
+                    List<StudyNoteModel> studyNotes = new ArrayList<>();
+                    for (DocumentSnapshot document : studyNoteSnapshot.getDocuments()) {
+                        studyNotes.add(StudyNoteModel.fromMap(
+                                document.getId(),
+                                dataWithDate(document)
+                        ));
+                    }
+
+                    if (!quizResultsTask.isSuccessful()) {
+                        callback.onStudyNotesOnly(
+                                studyNotes,
+                                toUserMessage(quizResultsTask.getException())
+                        );
+                        return;
+                    }
+
+                    QuerySnapshot quizResultSnapshot = quizResultsTask.getResult();
+                    List<QuizResultModel> quizResults = new ArrayList<>();
+                    for (DocumentSnapshot document : quizResultSnapshot.getDocuments()) {
+                        quizResults.add(QuizResultModel.fromMap(
+                                document.getId(),
+                                dataWithDate(document)
+                        ));
+                    }
+                    callback.onSuccess(studyNotes, quizResults);
+                });
     }
 
     public void deleteStudyNoteWithRelatedData(
