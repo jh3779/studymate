@@ -79,6 +79,9 @@ public class SummaryResultViewModel extends ViewModel {
         firestoreService.saveQuizzes(quizModels, new FirestoreService.SaveListCallback() {
             @Override
             public void onSuccess(List<String> documentIds) {
+                for (int i = 0; i < Math.min(documentIds.size(), quizModels.size()); i++) {
+                    quizModels.get(i).setId(documentIds.get(i));
+                }
                 state.setValue(State.success(new ArrayList<>(quizModels)));
             }
 

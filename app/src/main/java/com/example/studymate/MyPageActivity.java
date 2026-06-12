@@ -12,6 +12,7 @@ public class MyPageActivity extends BaseActivity {
     private final FirestoreService firestoreService = new FirestoreService();
     private TextView studyCountText;
     private TextView quizCountText;
+    private TextView averageScoreText;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -21,6 +22,7 @@ public class MyPageActivity extends BaseActivity {
         TextView accountText = findViewById(R.id.accountText);
         studyCountText = findViewById(R.id.myStudyCountText);
         quizCountText = findViewById(R.id.myQuizCountText);
+        averageScoreText = findViewById(R.id.myAverageScoreText);
         String email = authService.getCurrentUserEmail();
         accountText.setText((email == null ? "로그인 사용자" : email) + "\n회원");
 
@@ -43,6 +45,7 @@ public class MyPageActivity extends BaseActivity {
         if (userId == null) {
             studyCountText.setText("0\n학습 기록");
             quizCountText.setText("0\n퀴즈 풀이");
+            averageScoreText.setText("0%\n평균 정답률");
             return;
         }
 
@@ -51,6 +54,7 @@ public class MyPageActivity extends BaseActivity {
             public void onSuccess(UserStatsModel stats) {
                 studyCountText.setText(stats.getStudyNoteCount() + "\n학습 기록");
                 quizCountText.setText(stats.getQuizResultCount() + "\n퀴즈 풀이");
+                averageScoreText.setText(stats.getAverageScore() + "%\n평균 정답률");
             }
 
             @Override
