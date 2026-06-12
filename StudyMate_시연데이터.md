@@ -85,7 +85,7 @@
 ## 4. 시연 시나리오 (발표 흐름)
 
 ### 정상 시나리오 (백엔드 서버 연결 시)
-1. 앱 실행 → 로그인 화면 (테스트 계정: `test@studymate.com` / `Test1234!`)
+1. 앱 실행 → 로그인 화면 (테스트 계정: `test@smtest.sw` / `1234567890`)
 2. 홈 화면 → **새 학습 시작** 탭
 3. 위 테스트 텍스트 입력 후 **AI 요약 생성** 버튼 클릭
 4. 요약 4개 + 키워드 3개 결과 확인
@@ -111,8 +111,13 @@ return;
 
 | 항목 | 값 |
 |------|-----|
-| 이메일 | test@studymate.com |
-| 비밀번호 | Test1234! |
-| 비고 | Firebase Console에서 미리 생성 필요 |
+| 이메일 | test@smtest.sw |
+| 비밀번호 | 1234567890 |
+| 비고 | Firebase Console에서 이메일 인증 완료 상태로 설정 필요 |
 
-> Firebase Console → Authentication → Add user 에서 위 계정을 미리 등록해두면 발표 당일 로그인 과정도 매끄럽게 시연 가능합니다.
+> ⚠️ **중요**: 백엔드 서버는 `email_verified === true`를 필수 체크합니다.
+> `test@smtest.sw`는 실제 받은편지함이 없으므로 Firebase Console 또는 Admin SDK에서
+> 수동으로 `emailVerified: true` 설정이 필요합니다.
+>
+> **설정 방법**: Firebase Console → Authentication → 해당 계정 선택 →
+> 이메일 인증 상태가 미인증이면 Admin SDK로 `admin.auth().updateUser(uid, { emailVerified: true })` 실행
