@@ -11,6 +11,7 @@ import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.core.content.ContextCompat;
 
 import com.example.studymate.model.QuizModel;
@@ -58,6 +59,7 @@ public class WrongAnswerActivity extends BaseActivity {
     private Button retryWrongButton;
     private Button retryQuizButton;
     private String noteId = "";
+    private boolean openedFromResult;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -76,7 +78,9 @@ public class WrongAnswerActivity extends BaseActivity {
         retryWrongButton = findViewById(R.id.retryWrongButton);
         retryQuizButton = findViewById(R.id.retryQuizButton);
 
-        configureHeader();
+        openedFromResult = getIntent().hasExtra("userAnswers")
+                || getIntent().hasExtra("quizListSerializable");
+        showInitialHeader();
 
         userAnswers = (ArrayList<Integer>) getIntent().getSerializableExtra("userAnswers");
         noteId = getIntent().getStringExtra("noteId");
@@ -102,10 +106,16 @@ public class WrongAnswerActivity extends BaseActivity {
             loadSavedWrongAnswers();
         }
 
-        bindClick(R.id.backResult, v -> finish());
+        bindClick(R.id.backResult, v -> navigateBack());
         bindClick(R.id.wrongHomeTab, v -> switchTopLevel(HomeActivity.class));
         bindClick(R.id.wrongMyPageTab, v -> switchTopLevel(MyPageActivity.class));
         bindClick(R.id.retryWrongButton, v -> retryCurrentWrongAnswer());
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                navigateBack();
+            }
+        });
 
         if (retryQuizButton != null) {
             retryQuizButton.setOnClickListener(v -> {
@@ -140,6 +150,22 @@ public class WrongAnswerActivity extends BaseActivity {
 
     private void returnHome() {
         goToAndClear(HomeActivity.class);
+    }
+
+    private void navigateBack() {
+        if (isSavedWrongAnswerDetailVisible()
+                && noteGroupedWrongAnswers != null
+                && !noteGroupedWrongAnswers.isEmpty()) {
+            returnToSelectionOrHome();
+            return;
+        }
+        finish();
+    }
+
+    private boolean isSavedWrongAnswerDetailVisible() {
+        return showingSavedWrongAnswers
+                && wrongAnswerDetailPanel != null
+                && wrongAnswerDetailPanel.getVisibility() == View.VISIBLE;
     }
 
     /** 저장된 오답 모드 완료 후: 노트 선택 화면으로 복귀하거나 홈으로 이동 */
@@ -202,14 +228,32 @@ public class WrongAnswerActivity extends BaseActivity {
         );
     }
 
-    private void configureHeader() {
-        View backResult = findViewById(R.id.backResult);
-        View eyebrow = findViewById(R.id.wrongAnswerEyebrow);
-        boolean openedFromResult = getIntent().hasExtra("userAnswers")
-                || getIntent().hasExtra("quizListSerializable");
+    private void showInitialHeader() {
+        if (openedFromResult) {
+            showBackHeader(R.string.wrong_answer_back_result, R.string.cd_back_result);
+        } else {
+            showListHeader();
+        }
+    }
 
-        backResult.setVisibility(openedFromResult ? View.VISIBLE : View.GONE);
-        eyebrow.setVisibility(openedFromResult ? View.GONE : View.VISIBLE);
+    private void showListHeader() {
+        TextView backNavigation = findViewById(R.id.backResult);
+        View eyebrow = findViewById(R.id.wrongAnswerEyebrow);
+        backNavigation.setVisibility(View.GONE);
+        eyebrow.setVisibility(View.VISIBLE);
+    }
+
+    private void showSavedDetailHeader() {
+        showBackHeader(R.string.wrong_answer_back_list, R.string.cd_back_wrong_answers);
+    }
+
+    private void showBackHeader(int textResId, int contentDescriptionResId) {
+        TextView backNavigation = findViewById(R.id.backResult);
+        View eyebrow = findViewById(R.id.wrongAnswerEyebrow);
+        backNavigation.setText(textResId);
+        backNavigation.setContentDescription(getString(contentDescriptionResId));
+        backNavigation.setVisibility(View.VISIBLE);
+        eyebrow.setVisibility(View.GONE);
     }
 
     private void loadSavedWrongAnswers() {
@@ -271,6 +315,7 @@ public class WrongAnswerActivity extends BaseActivity {
                                        Map<String, List<WrongAnswerModel>> grouped) {
         cachedStudyNotes = notes;
         noteGroupedWrongAnswers = grouped;
+        showListHeader();
 
         Map<String, String> noteTitleById = new HashMap<>();
         if (notes != null) {
@@ -378,6 +423,11 @@ public class WrongAnswerActivity extends BaseActivity {
     private void showDetailPanel() {
         if (noteSelectPanel != null) noteSelectPanel.setVisibility(View.GONE);
         if (wrongAnswerDetailPanel != null) wrongAnswerDetailPanel.setVisibility(View.VISIBLE);
+        if (showingSavedWrongAnswers && noteGroupedWrongAnswers != null) {
+            showSavedDetailHeader();
+        } else if (openedFromResult) {
+            showBackHeader(R.string.wrong_answer_back_result, R.string.cd_back_result);
+        }
     }
 
     /**

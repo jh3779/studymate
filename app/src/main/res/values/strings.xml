@@ -23,6 +23,9 @@
     <string name="cd_back_summary">요약 결과로 돌아가기</string>
     <string name="cd_back_result">퀴즈 결과로 돌아가기</string>
     <string name="cd_back_history">학습 목록으로 돌아가기</string>
+    <string name="cd_back_wrong_answers">오답노트 목록으로 돌아가기</string>
+    <string name="wrong_answer_back_result">결과</string>
+    <string name="wrong_answer_back_list">오답노트</string>
     <!-- 홈 통계 카드 -->
     <string name="cd_stat_study">총 학습 횟수. 탭하면 학습 목록으로 이동합니다.</string>
     <string name="cd_stat_quiz">총 퀴즈 풀이 횟수</string>

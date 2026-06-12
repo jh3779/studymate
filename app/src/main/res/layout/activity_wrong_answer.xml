@@ -22,7 +22,7 @@
             <TextView
                 android:id="@+id/backResult"
                 style="@style/StudyMateBackNavigation"
-                android:text="결과"
+                android:text="@string/wrong_answer_back_result"
                 android:contentDescription="@string/cd_back_result" />
 
             <TextView
