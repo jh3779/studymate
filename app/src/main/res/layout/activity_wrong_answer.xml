@@ -93,11 +93,26 @@
                 android:lineSpacingExtra="6dp" />
 
             <Button
-                android:id="@+id/retryQuizButton"
+                android:id="@+id/retryWrongButton"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:minHeight="48dp"
                 android:layout_marginTop="24dp"
+                android:background="@drawable/bg_button_primary"
+                android:paddingTop="8dp"
+                android:paddingBottom="8dp"
+                android:text="이 문제 다시 풀기"
+                android:textAllCaps="false"
+                android:textColor="@color/study_primary_text"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <Button
+                android:id="@+id/retryQuizButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:minHeight="48dp"
+                android:layout_marginTop="12dp"
                 android:background="@drawable/bg_button_secondary"
                 android:paddingTop="8dp"
                 android:paddingBottom="8dp"

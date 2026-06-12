@@ -1,5 +1,6 @@
 package com.example.studymate;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -32,7 +33,9 @@ public class WrongAnswerActivity extends BaseActivity {
     private TextView tvMyAnswer;
     private TextView tvRealAnswer;
     private TextView tvExplanation;
+    private Button retryWrongButton;
     private Button retryQuizButton;
+    private String noteId = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,11 +47,13 @@ public class WrongAnswerActivity extends BaseActivity {
         tvMyAnswer      = findViewById(R.id.optionOne);
         tvRealAnswer    = findViewById(R.id.optionTwo);
         tvExplanation   = findViewById(R.id.optionThree);
+        retryWrongButton = findViewById(R.id.retryWrongButton);
         retryQuizButton = findViewById(R.id.retryQuizButton);
 
         configureHeader();
 
         userAnswers = (ArrayList<Integer>) getIntent().getSerializableExtra("userAnswers");
+        noteId = getIntent().getStringExtra("noteId");
 
         // 결과창으로부터 배달 완료된 원본 AI 생성형 퀴즈 데이터 세트 수신
         ArrayList<QuizModel> receivedQuizList = (ArrayList<QuizModel>) getIntent().getSerializableExtra("quizListSerializable");
@@ -75,6 +80,7 @@ public class WrongAnswerActivity extends BaseActivity {
         bindClick(R.id.backResult, v -> finish());
         bindClick(R.id.wrongHomeTab, v -> switchTopLevel(HomeActivity.class));
         bindClick(R.id.wrongMyPageTab, v -> switchTopLevel(MyPageActivity.class));
+        bindClick(R.id.retryWrongButton, v -> retryCurrentWrongAnswer());
 
         if (retryQuizButton != null) {
             retryQuizButton.setOnClickListener(v -> {
@@ -109,6 +115,55 @@ public class WrongAnswerActivity extends BaseActivity {
 
     private void returnHome() {
         goToAndClear(HomeActivity.class);
+    }
+
+    private void retryCurrentWrongAnswer() {
+        QuizModel quiz;
+        String retryNoteId;
+
+        if (showingSavedWrongAnswers) {
+            if (savedWrongAnswers.isEmpty()) {
+                showShortToast("다시 풀 오답이 없습니다.");
+                return;
+            }
+            WrongAnswerModel wrongAnswer = savedWrongAnswers.get(currentWrongIndex);
+            quiz = quizFromWrongAnswer(wrongAnswer);
+            retryNoteId = wrongAnswer.getNoteId();
+        } else {
+            if (wrongIndices.isEmpty() || quizList.isEmpty()) {
+                showShortToast("다시 풀 오답이 없습니다.");
+                return;
+            }
+            quiz = quizList.get(wrongIndices.get(currentWrongIndex));
+            retryNoteId = noteId;
+        }
+
+        if (retryNoteId == null || retryNoteId.trim().isEmpty()) {
+            showShortToast("학습 기록 정보를 확인할 수 없습니다.");
+            return;
+        }
+
+        ArrayList<QuizModel> retryQuizzes = new ArrayList<>();
+        retryQuizzes.add(quiz);
+
+        Intent intent = new Intent(this, QuizActivity.class);
+        intent.putExtra("noteId", retryNoteId);
+        intent.putExtra("retryMode", true);
+        intent.putExtra("quizListSerializable", retryQuizzes);
+        startActivity(intent);
+    }
+
+    private QuizModel quizFromWrongAnswer(WrongAnswerModel wrongAnswer) {
+        return new QuizModel(
+                wrongAnswer.getQuizId(),
+                wrongAnswer.getNoteId(),
+                wrongAnswer.getUserId(),
+                wrongAnswer.getQuestion(),
+                wrongAnswer.getOptions(),
+                wrongAnswer.getCorrectIndex(),
+                wrongAnswer.getExplanation(),
+                wrongAnswer.getCreatedAt()
+        );
     }
 
     private void configureHeader() {
@@ -154,9 +209,12 @@ public class WrongAnswerActivity extends BaseActivity {
             if (tvMyAnswer != null) tvMyAnswer.setText("");
             if (tvRealAnswer != null) tvRealAnswer.setText("");
             if (tvExplanation != null) tvExplanation.setText("");
+            if (retryWrongButton != null) retryWrongButton.setVisibility(View.GONE);
             if (retryQuizButton != null) retryQuizButton.setText("돌아가기");
             return;
         }
+
+        if (retryWrongButton != null) retryWrongButton.setVisibility(View.VISIBLE);
 
         int originalIdx = wrongIndices.get(currentWrongIndex);
         QuizModel currentQuiz = quizList.get(originalIdx);
@@ -201,9 +259,12 @@ public class WrongAnswerActivity extends BaseActivity {
             if (tvMyAnswer != null) tvMyAnswer.setText("");
             if (tvRealAnswer != null) tvRealAnswer.setText("");
             if (tvExplanation != null) tvExplanation.setText("");
+            if (retryWrongButton != null) retryWrongButton.setVisibility(View.GONE);
             if (retryQuizButton != null) retryQuizButton.setText("돌아가기");
             return;
         }
+
+        if (retryWrongButton != null) retryWrongButton.setVisibility(View.VISIBLE);
 
         WrongAnswerModel current = savedWrongAnswers.get(currentWrongIndex);
         if (tvWrongProgress != null) {

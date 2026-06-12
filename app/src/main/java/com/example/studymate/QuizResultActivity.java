@@ -108,6 +108,7 @@ public class QuizResultActivity extends BaseActivity {
                     return;
                 }
                 Intent intent = new Intent(this, WrongAnswerActivity.class);
+                intent.putExtra("noteId", noteId);
                 intent.putIntegerArrayListExtra("userAnswers", userAnswers);
                 intent.putExtra("quizListSerializable", quizList);
                 startActivity(intent);

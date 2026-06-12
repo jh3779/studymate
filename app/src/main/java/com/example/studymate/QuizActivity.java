@@ -32,6 +32,7 @@ public class QuizActivity extends BaseActivity {
     private ArrayList<Integer> userAnswers = new ArrayList<>();
     private String noteId = "";
     private String attemptId = "";
+    private boolean retryMode;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,6 +49,7 @@ public class QuizActivity extends BaseActivity {
         };
         nextButton = findViewById(R.id.nextQuizButton);
 
+        TextView backNavigation = findViewById(R.id.backSummary);
         bindClick(R.id.backSummary, v -> finish());
 
         for (int i = 0; i < optionViews.length; i++) {
@@ -57,10 +59,21 @@ public class QuizActivity extends BaseActivity {
         nextButton.setOnClickListener(v -> moveNext());
 
         noteId = getIntent().getStringExtra("noteId");
-        String quizzesJson = getIntent().getStringExtra("quizzesJson");
-        parseQuizzesJson(quizzesJson);
+        retryMode = getIntent().getBooleanExtra("retryMode", false);
+        if (retryMode) {
+            backNavigation.setText("오답");
+        }
 
-        if (!quizList.isEmpty()) {
+        ArrayList<QuizModel> receivedQuizList =
+                (ArrayList<QuizModel>) getIntent().getSerializableExtra("quizListSerializable");
+        if (receivedQuizList != null) {
+            quizList = receivedQuizList;
+        } else {
+            String quizzesJson = getIntent().getStringExtra("quizzesJson");
+            parseQuizzesJson(quizzesJson);
+        }
+
+        if (isValidQuizList()) {
             restoreState(savedInstanceState);
             renderQuestion();
         } else {
@@ -150,6 +163,28 @@ public class QuizActivity extends BaseActivity {
         optionViews[index].setContentDescription(
                 "보기 " + (index + 1) + ". " + optionText
         );
+    }
+
+    private boolean isValidQuizList() {
+        if (quizList.isEmpty() || (!retryMode && quizList.size() != 3)) {
+            return false;
+        }
+        for (QuizModel quiz : quizList) {
+            if (quiz == null
+                    || quiz.getId() == null
+                    || quiz.getId().trim().isEmpty()
+                    || quiz.getQuestion() == null
+                    || quiz.getQuestion().trim().isEmpty()
+                    || quiz.getOptions() == null
+                    || quiz.getOptions().size() != 4
+                    || quiz.getAnswerIndex() < 0
+                    || quiz.getAnswerIndex() > 3
+                    || quiz.getExplanation() == null
+                    || quiz.getExplanation().trim().isEmpty()) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private void moveNext() {
