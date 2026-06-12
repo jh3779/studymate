@@ -50,6 +50,7 @@
                     android:paddingTop="8dp"
                     android:paddingBottom="8dp"
                     android:text="0\n총 학습"
+                    android:contentDescription="@string/cd_stat_study"
                     android:textColor="@color/study_text"
                     android:textSize="18sp"
                     android:textStyle="bold" />
@@ -66,6 +67,7 @@
                     android:paddingTop="8dp"
                     android:paddingBottom="8dp"
                     android:text="0\n퀴즈 풀이"
+                    android:contentDescription="@string/cd_stat_quiz"
                     android:textColor="@color/study_text"
                     android:textSize="18sp"
                     android:textStyle="bold" />
@@ -82,6 +84,7 @@
                     android:paddingTop="8dp"
                     android:paddingBottom="8dp"
                     android:text="0%\n평균 정답률"
+                    android:contentDescription="@string/cd_stat_avg"
                     android:textColor="@color/study_text"
                     android:textSize="18sp"
                     android:textStyle="bold" />
@@ -143,20 +146,23 @@
             style="@style/StudyMateBottomTabSelected"
             android:layout_width="0dp"
             android:layout_weight="1"
-            android:text="홈" />
+            android:text="홈"
+            android:contentDescription="@string/cd_tab_home" />
 
         <TextView
             android:id="@+id/wrongTab"
             style="@style/StudyMateBottomTab"
             android:layout_width="0dp"
             android:layout_weight="1"
-            android:text="오답노트" />
+            android:text="오답노트"
+            android:contentDescription="@string/cd_tab_wrong" />
 
         <TextView
             android:id="@+id/myPageTab"
             style="@style/StudyMateBottomTab"
             android:layout_width="0dp"
             android:layout_weight="1"
-            android:text="마이페이지" />
+            android:text="마이페이지"
+            android:contentDescription="@string/cd_tab_mypage" />
     </LinearLayout>
 </LinearLayout>

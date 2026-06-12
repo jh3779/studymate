@@ -17,7 +17,8 @@
         <TextView
             android:id="@+id/studyHistoryBack"
             style="@style/StudyMateBackNavigation"
-            android:text="홈" />
+            android:text="홈"
+            android:contentDescription="@string/cd_back_home" />
 
         <TextView
             style="@style/StudyMatePageTitle"

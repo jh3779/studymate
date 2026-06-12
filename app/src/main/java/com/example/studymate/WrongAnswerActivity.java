@@ -288,11 +288,14 @@ public class WrongAnswerActivity extends BaseActivity {
 
             TextView card = new TextView(this);
             card.setText(title + "\n오답 " + wrongList.size() + "문제");
+            card.setContentDescription(title + ", 오답 " + wrongList.size() + "문제. 탭하여 오답 보기");
             card.setTextColor(ContextCompat.getColor(this, R.color.study_text));
             card.setTextSize(17f);
             card.setTypeface(null, Typeface.BOLD);
             card.setBackgroundResource(R.drawable.bg_card);
             card.setPadding(padPx, padPx, padPx, padPx);
+            card.setClickable(true);
+            card.setFocusable(true);
 
             LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.MATCH_PARENT,

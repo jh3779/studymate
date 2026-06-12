@@ -20,7 +20,8 @@
             style="@style/StudyMateBackNavigation"
             android:layout_width="0dp"
             android:layout_weight="1"
-            android:text="요약" />
+            android:text="요약"
+            android:contentDescription="@string/cd_back_summary" />
 
         <TextView
             android:id="@+id/quizProgressText"

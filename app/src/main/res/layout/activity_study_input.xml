@@ -17,7 +17,8 @@
         <TextView
             android:id="@+id/backHome"
             style="@style/StudyMateBackNavigation"
-            android:text="홈" />
+            android:text="홈"
+            android:contentDescription="@string/cd_back_home" />
 
         <TextView
             style="@style/StudyMatePageTitle"
@@ -29,6 +30,8 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/page_content_gap"
             android:text="제목 *"
+            android:labelFor="@id/titleInput"
+            android:importantForAccessibility="no"
             android:textColor="@color/study_text_muted"
             android:textSize="16sp"
             android:textStyle="bold" />
@@ -50,6 +53,8 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="20dp"
             android:text="과목명"
+            android:labelFor="@id/subjectInput"
+            android:importantForAccessibility="no"
             android:textColor="@color/study_text_muted"
             android:textSize="16sp"
             android:textStyle="bold" />
@@ -71,6 +76,8 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="20dp"
             android:text="학습 내용 *"
+            android:labelFor="@id/contentInput"
+            android:importantForAccessibility="no"
             android:textColor="@color/study_text_muted"
             android:textSize="16sp"
             android:textStyle="bold" />

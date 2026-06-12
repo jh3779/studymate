@@ -17,7 +17,8 @@
         <TextView
             android:id="@+id/backToLogin"
             style="@style/StudyMateBackNavigation"
-            android:text="로그인" />
+            android:text="로그인"
+            android:contentDescription="@string/cd_back_login" />
 
         <TextView
             style="@style/StudyMatePageTitle"
@@ -29,6 +30,8 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/page_content_gap"
             android:text="이메일"
+            android:labelFor="@id/signupEmailInput"
+            android:importantForAccessibility="no"
             android:textColor="@color/study_text_muted"
             android:textSize="16sp"
             android:textStyle="bold" />
@@ -50,6 +53,8 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="20dp"
             android:text="비밀번호"
+            android:labelFor="@id/signupPasswordInput"
+            android:importantForAccessibility="no"
             android:textColor="@color/study_text_muted"
             android:textSize="16sp"
             android:textStyle="bold" />
@@ -71,6 +76,8 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="20dp"
             android:text="비밀번호 확인"
+            android:labelFor="@id/signupConfirmInput"
+            android:importantForAccessibility="no"
             android:textColor="@color/study_text_muted"
             android:textSize="16sp"
             android:textStyle="bold" />

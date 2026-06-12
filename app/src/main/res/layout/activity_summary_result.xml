@@ -25,7 +25,8 @@
                 style="@style/StudyMateBackNavigation"
                 android:layout_width="0dp"
                 android:layout_weight="1"
-                android:text="입력" />
+                android:text="입력"
+                android:contentDescription="@string/cd_back_input" />
 
             <TextView
                 android:layout_width="wrap_content"
