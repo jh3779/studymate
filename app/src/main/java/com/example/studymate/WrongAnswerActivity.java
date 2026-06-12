@@ -1,10 +1,13 @@
 package com.example.studymate;
 
 import android.content.Intent;
+import android.graphics.Color;
 import android.graphics.Typeface;
 import android.os.Bundle;
+import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -285,24 +288,21 @@ public class WrongAnswerActivity extends BaseActivity {
             List<WrongAnswerModel> wrongList = entry.getValue();
             String title = noteTitleById.containsKey(nId) ? noteTitleById.get(nId) : "학습 기록";
 
+            LinearLayout row = new LinearLayout(this);
+            row.setOrientation(LinearLayout.HORIZONTAL);
+            row.setGravity(Gravity.CENTER_VERTICAL);
+            row.setBackgroundResource(R.drawable.bg_card);
+            row.setPadding(padPx, padPx, padPx, padPx);
+
             TextView card = new TextView(this);
             card.setText(title + "\n오답 " + wrongList.size() + "문제");
             card.setContentDescription(title + ", 오답 " + wrongList.size() + "문제. 탭하여 오답 보기");
             card.setTextColor(ContextCompat.getColor(this, R.color.study_text));
             card.setTextSize(17f);
             card.setTypeface(null, Typeface.BOLD);
-            card.setBackgroundResource(R.drawable.bg_card);
-            card.setPadding(padPx, padPx, padPx, padPx);
+            card.setPadding(0, 0, dpToPx(8), 0);
             card.setClickable(true);
             card.setFocusable(true);
-
-            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT
-            );
-            params.setMargins(0, gapPx, 0, 0);
-            card.setLayoutParams(params);
-
             card.setOnClickListener(v -> {
                 savedWrongAnswers = new ArrayList<>(wrongList);
                 currentWrongIndex = 0;
@@ -310,12 +310,69 @@ public class WrongAnswerActivity extends BaseActivity {
                 showDetailPanel();
                 displaySavedWrongAnswer();
             });
+            row.addView(card, new LinearLayout.LayoutParams(
+                    0,
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    1f
+            ));
 
-            noteSelectContainer.addView(card);
+            ImageButton deleteButton = createDeleteButton(title + " 오답 기록 삭제");
+            deleteButton.setOnClickListener(v -> confirmDeleteWrongAnswers(title, wrongList));
+            row.addView(deleteButton);
+
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+            );
+            params.setMargins(0, gapPx, 0, 0);
+            noteSelectContainer.addView(row, params);
         }
 
         noteSelectPanel.setVisibility(View.VISIBLE);
         wrongAnswerDetailPanel.setVisibility(View.GONE);
+    }
+
+    private ImageButton createDeleteButton(String description) {
+        ImageButton button = new ImageButton(this);
+        int size = dpToPx(48);
+        button.setLayoutParams(new LinearLayout.LayoutParams(size, size));
+        button.setImageResource(R.drawable.ic_delete);
+        button.setBackgroundColor(Color.TRANSPARENT);
+        button.setContentDescription(description);
+        button.setPadding(dpToPx(12), dpToPx(12), dpToPx(12), dpToPx(12));
+        return button;
+    }
+
+    private void confirmDeleteWrongAnswers(
+            String title,
+            List<WrongAnswerModel> wrongAnswers
+    ) {
+        showDeleteConfirmation(
+                "오답 기록을 삭제할까요?",
+                "'" + title + "'의 오답 " + wrongAnswers.size()
+                        + "개가 오답노트에서 삭제됩니다.",
+                () -> deleteWrongAnswers(wrongAnswers)
+        );
+    }
+
+    private void deleteWrongAnswers(List<WrongAnswerModel> wrongAnswers) {
+        firestoreService.deleteWrongAnswers(
+                wrongAnswers,
+                new FirestoreService.DeleteCallback() {
+                    @Override
+                    public void onSuccess() {
+                        showShortToast("오답 기록을 삭제했습니다.");
+                        noteGroupedWrongAnswers = null;
+                        cachedStudyNotes = null;
+                        loadSavedWrongAnswers();
+                    }
+
+                    @Override
+                    public void onFailure(String errorMessage) {
+                        showShortToast(errorMessage);
+                    }
+                }
+        );
     }
 
     private void showDetailPanel() {

@@ -9,6 +9,7 @@ const {
 } = require("@firebase/rules-unit-testing");
 const {
   collection,
+  deleteDoc,
   doc,
   getDoc,
   getDocs,
@@ -168,6 +169,34 @@ test("rejects unauthenticated and cross-user access", async () => {
   await assertFails(
     setDoc(doc(bobDb, "study_notes", "note-2"), studyNoteData())
   );
+});
+
+test("allows owners to delete related study data and blocks other users", async () => {
+  const aliceDb = firestoreFor(ALICE);
+  const bobDb = firestoreFor(BOB);
+
+  await assertSucceeds(
+    setDoc(doc(aliceDb, "study_notes", "note-1"), studyNoteData())
+  );
+  await assertSucceeds(
+    setDoc(doc(aliceDb, "quizzes", "quiz-1"), quizData())
+  );
+  await assertSucceeds(
+    setDoc(doc(aliceDb, "quiz_results", "result-1"), quizResultData())
+  );
+  await assertSucceeds(
+    setDoc(doc(aliceDb, "wrong_answers", "wrong-1"), wrongAnswerData())
+  );
+
+  await assertFails(deleteDoc(doc(bobDb, "study_notes", "note-1")));
+  await assertFails(deleteDoc(doc(bobDb, "wrong_answers", "wrong-1")));
+
+  const deleteBatch = writeBatch(aliceDb);
+  deleteBatch.delete(doc(aliceDb, "wrong_answers", "wrong-1"));
+  deleteBatch.delete(doc(aliceDb, "quiz_results", "result-1"));
+  deleteBatch.delete(doc(aliceDb, "quizzes", "quiz-1"));
+  deleteBatch.delete(doc(aliceDb, "study_notes", "note-1"));
+  await assertSucceeds(deleteBatch.commit());
 });
 
 test("allows profile creation but blocks unverified users from app data", async () => {

@@ -13,6 +13,7 @@ import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
+import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.firestore.WriteBatch;
 import com.google.android.gms.tasks.Tasks;
 
@@ -54,6 +55,12 @@ public class FirestoreService {
 
     public interface StatsCallback {
         void onSuccess(UserStatsModel stats);
+
+        void onFailure(String errorMessage);
+    }
+
+    public interface DeleteCallback {
+        void onSuccess();
 
         void onFailure(String errorMessage);
     }
@@ -173,6 +180,68 @@ public class FirestoreService {
         document.set(withCreatedAt(result.toMap()))
                 .addOnSuccessListener(unused -> callback.onSuccess(document.getId()))
                 .addOnFailureListener(error -> callback.onFailure(toUserMessage(error)));
+    }
+
+    public void deleteStudyNoteWithRelatedData(
+            String noteId,
+            String userId,
+            DeleteCallback callback
+    ) {
+        if (isBlank(noteId) || isBlank(userId)) {
+            callback.onFailure("삭제할 학습 기록 정보를 확인할 수 없습니다.");
+            return;
+        }
+
+        com.google.android.gms.tasks.Task<QuerySnapshot> quizzesTask =
+                firestore.collection(QUIZZES)
+                        .whereEqualTo("noteId", noteId)
+                        .whereEqualTo("userId", userId)
+                        .get();
+        com.google.android.gms.tasks.Task<QuerySnapshot> resultsTask =
+                firestore.collection(QUIZ_RESULTS)
+                        .whereEqualTo("noteId", noteId)
+                        .whereEqualTo("userId", userId)
+                        .get();
+        com.google.android.gms.tasks.Task<QuerySnapshot> wrongAnswersTask =
+                firestore.collection(WRONG_ANSWERS)
+                        .whereEqualTo("noteId", noteId)
+                        .whereEqualTo("userId", userId)
+                        .get();
+
+        Tasks.whenAllSuccess(quizzesTask, resultsTask, wrongAnswersTask)
+                .addOnSuccessListener(results -> {
+                    QuerySnapshot quizzes = (QuerySnapshot) results.get(0);
+                    QuerySnapshot quizResults = (QuerySnapshot) results.get(1);
+                    QuerySnapshot wrongAnswers = (QuerySnapshot) results.get(2);
+                    int deleteCount = 1
+                            + quizzes.size()
+                            + quizResults.size()
+                            + wrongAnswers.size();
+                    if (deleteCount > 500) {
+                        callback.onFailure("연결된 기록이 너무 많아 한 번에 삭제할 수 없습니다.");
+                        return;
+                    }
+
+                    WriteBatch batch = firestore.batch();
+                    for (DocumentSnapshot document : wrongAnswers.getDocuments()) {
+                        batch.delete(document.getReference());
+                    }
+                    for (DocumentSnapshot document : quizResults.getDocuments()) {
+                        batch.delete(document.getReference());
+                    }
+                    for (DocumentSnapshot document : quizzes.getDocuments()) {
+                        batch.delete(document.getReference());
+                    }
+                    batch.delete(firestore.collection(STUDY_NOTES).document(noteId));
+                    batch.commit()
+                            .addOnSuccessListener(unused -> callback.onSuccess())
+                            .addOnFailureListener(
+                                    error -> callback.onFailure(toUserMessage(error))
+                            );
+                })
+                .addOnFailureListener(error -> callback.onFailure(
+                        toUserMessage((Exception) error)
+                ));
     }
 
     public void getQuizResults(String userId, ListCallback<QuizResultModel> callback) {
@@ -314,6 +383,32 @@ public class FirestoreService {
                     }
                     callback.onSuccess(wrongAnswers);
                 })
+                .addOnFailureListener(error -> callback.onFailure(toUserMessage(error)));
+    }
+
+    public void deleteWrongAnswers(
+            List<WrongAnswerModel> wrongAnswers,
+            DeleteCallback callback
+    ) {
+        if (wrongAnswers == null || wrongAnswers.isEmpty()) {
+            callback.onFailure("삭제할 오답 기록이 없습니다.");
+            return;
+        }
+        if (wrongAnswers.size() > 500) {
+            callback.onFailure("오답 기록이 너무 많아 한 번에 삭제할 수 없습니다.");
+            return;
+        }
+
+        WriteBatch batch = firestore.batch();
+        for (WrongAnswerModel wrongAnswer : wrongAnswers) {
+            if (wrongAnswer == null || isBlank(wrongAnswer.getId())) {
+                callback.onFailure("삭제할 오답 기록 정보를 확인할 수 없습니다.");
+                return;
+            }
+            batch.delete(firestore.collection(WRONG_ANSWERS).document(wrongAnswer.getId()));
+        }
+        batch.commit()
+                .addOnSuccessListener(unused -> callback.onSuccess())
                 .addOnFailureListener(error -> callback.onFailure(toUserMessage(error)));
     }
 

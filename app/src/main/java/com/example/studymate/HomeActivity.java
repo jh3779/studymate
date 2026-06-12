@@ -2,7 +2,10 @@ package com.example.studymate;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.graphics.Color;
 import android.view.View;
+import android.view.Gravity;
+import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -182,19 +185,37 @@ public class HomeActivity extends BaseActivity {
         int count = Math.min(notes.size(), RECENT_NOTE_LIMIT);
         for (int i = 0; i < count; i++) {
             StudyNoteModel note = notes.get(i);
+            LinearLayout row = new LinearLayout(this);
+            row.setOrientation(LinearLayout.HORIZONTAL);
+            row.setGravity(Gravity.CENTER_VERTICAL);
+            row.setBackgroundResource(R.drawable.bg_card);
+            int padding = getResources().getDimensionPixelSize(R.dimen.card_padding);
+            row.setPadding(padding, padding, padding, padding);
+
             TextView card = new TextView(this);
             card.setText(buildRecentNoteText(note, latestScores.get(note.getId())));
             card.setTextColor(getColor(R.color.study_text));
             card.setTextSize(17);
             card.setTypeface(card.getTypeface(), android.graphics.Typeface.BOLD);
-            card.setBackgroundResource(R.drawable.bg_card);
-            card.setPadding(
-                    getResources().getDimensionPixelSize(R.dimen.card_padding),
-                    getResources().getDimensionPixelSize(R.dimen.card_padding),
-                    getResources().getDimensionPixelSize(R.dimen.card_padding),
-                    getResources().getDimensionPixelSize(R.dimen.card_padding)
-            );
+            card.setPadding(0, 0, dpToPx(8), 0);
+            card.setClickable(true);
+            card.setFocusable(true);
+            card.setContentDescription(buildRecentNoteText(
+                    note,
+                    latestScores.get(note.getId())
+            ) + ". 학습 기록 열기");
             card.setOnClickListener(v -> openStudyNote(note));
+            row.addView(card, new LinearLayout.LayoutParams(
+                    0,
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    1f
+            ));
+
+            ImageButton deleteButton = createDeleteButton(
+                    safeTitle(note) + " 학습 기록 삭제"
+            );
+            deleteButton.setOnClickListener(v -> confirmDeleteStudyNote(note));
+            row.addView(deleteButton);
 
             LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.MATCH_PARENT,
@@ -202,8 +223,54 @@ public class HomeActivity extends BaseActivity {
             );
             int itemGap = getResources().getDimensionPixelSize(R.dimen.list_item_gap);
             params.setMargins(0, itemGap, 0, 0);
-            recentNotesContainer.addView(card, params);
+            recentNotesContainer.addView(row, params);
         }
+    }
+
+    private ImageButton createDeleteButton(String description) {
+        ImageButton button = new ImageButton(this);
+        int size = dpToPx(48);
+        button.setLayoutParams(new LinearLayout.LayoutParams(size, size));
+        button.setImageResource(R.drawable.ic_delete);
+        button.setBackgroundColor(Color.TRANSPARENT);
+        button.setContentDescription(description);
+        button.setPadding(dpToPx(12), dpToPx(12), dpToPx(12), dpToPx(12));
+        return button;
+    }
+
+    private void confirmDeleteStudyNote(StudyNoteModel note) {
+        showDeleteConfirmation(
+                "학습 기록을 삭제할까요?",
+                "'" + safeTitle(note)
+                        + "'와 연결된 퀴즈, 결과, 오답 기록도 함께 삭제됩니다.",
+                () -> deleteStudyNote(note)
+        );
+    }
+
+    private void deleteStudyNote(StudyNoteModel note) {
+        String userId = authService.getCurrentUserId();
+        firestoreService.deleteStudyNoteWithRelatedData(
+                note.getId(),
+                userId,
+                new FirestoreService.DeleteCallback() {
+                    @Override
+                    public void onSuccess() {
+                        showShortToast("학습 기록을 삭제했습니다.");
+                        loadHomeData();
+                    }
+
+                    @Override
+                    public void onFailure(String errorMessage) {
+                        showShortToast(errorMessage);
+                    }
+                }
+        );
+    }
+
+    private String safeTitle(StudyNoteModel note) {
+        return note.getTitle() == null || note.getTitle().trim().isEmpty()
+                ? "제목 없는 학습"
+                : note.getTitle().trim();
     }
 
     private Map<String, Integer> latestScoresByNote(List<QuizResultModel> results) {

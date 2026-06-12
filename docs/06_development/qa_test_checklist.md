@@ -30,7 +30,7 @@ git pull --ff-only origin main
 - `lintDebug`: 통과
 - `testDebugUnitTest`: 통과
 - Android 핵심 로직 단위 테스트: `14 pass / 0 fail`
-- Firestore rules: `11 pass / 0 fail`
+- Firestore rules: `12 pass / 0 fail`
 - Firestore rules 의존성 감사: `0 vulnerabilities`
 - Functions 인증/호출 제한: `8 pass / 0 fail`
 
