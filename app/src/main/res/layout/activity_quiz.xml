@@ -50,7 +50,7 @@
         android:id="@+id/questionText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="36dp"
+        android:layout_marginTop="@dimen/header_title_gap"
         android:textColor="@color/study_text"
         android:textSize="25sp"
         android:textStyle="bold" />

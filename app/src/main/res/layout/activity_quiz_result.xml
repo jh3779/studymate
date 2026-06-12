@@ -15,19 +15,20 @@
         android:paddingBottom="@dimen/screen_padding">
 
         <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="퀴즈 결과"
-            android:textColor="@color/study_text"
-            android:textSize="28sp"
-            android:textStyle="bold" />
+            style="@style/StudyMateHeaderEyebrow"
+            android:text="학습 결과" />
+
+        <TextView
+            style="@style/StudyMatePageTitle"
+            android:layout_marginTop="@dimen/header_title_gap"
+            android:text="퀴즈 결과" />
 
         <TextView
             android:id="@+id/scoreCircle"
             android:layout_width="160dp"
             android:layout_height="160dp"
             android:layout_gravity="center_horizontal"
-            android:layout_marginTop="36dp"
+            android:layout_marginTop="@dimen/page_content_gap"
             android:background="@drawable/bg_card"
             android:gravity="center"
             android:textColor="@color/study_text"
@@ -79,9 +80,12 @@
         <Button
             android:id="@+id/resultHomeButton"
             android:layout_width="match_parent"
-            android:layout_height="48dp"
+            android:layout_height="wrap_content"
+            android:minHeight="48dp"
             android:layout_marginTop="12dp"
             android:background="@drawable/bg_button_secondary"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp"
             android:text="홈으로"
             android:textAllCaps="false"
             android:textColor="@color/study_text"

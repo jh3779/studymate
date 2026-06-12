@@ -125,7 +125,9 @@ public class SummaryResultActivity extends BaseActivity {
                         LinearLayout.LayoutParams.WRAP_CONTENT,
                         LinearLayout.LayoutParams.WRAP_CONTENT
                 );
-                params.setMarginEnd(16);
+                params.setMarginEnd(
+                        getResources().getDimensionPixelSize(R.dimen.chip_gap)
+                );
                 chip.setLayoutParams(params);
                 keywordsContainer.addView(chip);
             }

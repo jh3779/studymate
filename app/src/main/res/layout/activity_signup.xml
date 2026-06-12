@@ -20,18 +20,14 @@
             android:text="로그인" />
 
         <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:text="회원가입"
-            android:textColor="@color/study_text"
-            android:textSize="30sp"
-            android:textStyle="bold" />
+            style="@style/StudyMatePageTitle"
+            android:layout_marginTop="@dimen/header_title_gap"
+            android:text="회원가입" />
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="32dp"
+            android:layout_marginTop="@dimen/page_content_gap"
             android:text="이메일"
             android:textColor="@color/study_text_muted"
             android:textSize="16sp"

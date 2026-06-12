@@ -18,7 +18,7 @@
         <TextView
             android:layout_width="88dp"
             android:layout_height="88dp"
-            android:layout_marginTop="64dp"
+            android:layout_marginTop="32dp"
             android:background="@drawable/bg_logo"
             android:contentDescription="StudyMate 앱 로고"
             android:gravity="center"
@@ -39,7 +39,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="40dp"
+            android:layout_marginTop="32dp"
             android:text="이메일"
             android:textColor="@color/study_text_muted"
             android:textSize="16sp"

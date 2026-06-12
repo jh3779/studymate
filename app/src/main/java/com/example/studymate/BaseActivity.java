@@ -64,6 +64,16 @@ public abstract class BaseActivity extends AppCompatActivity {
         startActivity(new Intent(this, target));
     }
 
+    @SuppressWarnings("deprecation")
+    protected void switchTopLevel(Class<?> target) {
+        Intent intent = new Intent(this, target);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        startActivity(intent);
+        overridePendingTransition(0, 0);
+        finish();
+        overridePendingTransition(0, 0);
+    }
+
     protected void goToAndClear(Class<?> target) {
         Intent intent = new Intent(this, target);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);

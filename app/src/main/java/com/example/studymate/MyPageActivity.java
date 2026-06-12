@@ -28,8 +28,8 @@ public class MyPageActivity extends BaseActivity {
             authService.signOut();
             goToAndClear(LoginActivity.class);
         });
-        bindClick(R.id.myHomeTab, v -> goToAndClear(HomeActivity.class));
-        bindClick(R.id.myWrongTab, v -> goTo(WrongAnswerActivity.class));
+        bindClick(R.id.myHomeTab, v -> switchTopLevel(HomeActivity.class));
+        bindClick(R.id.myWrongTab, v -> switchTopLevel(WrongAnswerActivity.class));
     }
 
     @Override

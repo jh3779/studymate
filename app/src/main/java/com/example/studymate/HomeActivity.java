@@ -40,8 +40,8 @@ public class HomeActivity extends BaseActivity {
         recentNotesContainer = findViewById(R.id.recentNotesContainer);
 
         bindClick(R.id.startStudyButton, v -> goTo(StudyInputActivity.class));
-        bindClick(R.id.wrongTab, v -> goTo(WrongAnswerActivity.class));
-        bindClick(R.id.myPageTab, v -> goTo(MyPageActivity.class));
+        bindClick(R.id.wrongTab, v -> switchTopLevel(WrongAnswerActivity.class));
+        bindClick(R.id.myPageTab, v -> switchTopLevel(MyPageActivity.class));
     }
 
     @Override
@@ -125,7 +125,8 @@ public class HomeActivity extends BaseActivity {
                     LinearLayout.LayoutParams.MATCH_PARENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT
             );
-            params.setMargins(0, i == 0 ? 12 : 14, 0, 0);
+            int itemGap = getResources().getDimensionPixelSize(R.dimen.list_item_gap);
+            params.setMargins(0, itemGap, 0, 0);
             recentNotesContainer.addView(card, params);
         }
     }

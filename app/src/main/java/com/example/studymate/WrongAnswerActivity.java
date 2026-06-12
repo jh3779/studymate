@@ -1,6 +1,7 @@
 package com.example.studymate;
 
 import android.os.Bundle;
+import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import com.example.studymate.model.QuizModel;
@@ -45,6 +46,8 @@ public class WrongAnswerActivity extends BaseActivity {
         tvExplanation   = findViewById(R.id.optionThree);
         retryQuizButton = findViewById(R.id.retryQuizButton);
 
+        configureHeader();
+
         userAnswers = (ArrayList<Integer>) getIntent().getSerializableExtra("userAnswers");
 
         // 결과창으로부터 배달 완료된 원본 AI 생성형 퀴즈 데이터 세트 수신
@@ -70,8 +73,8 @@ public class WrongAnswerActivity extends BaseActivity {
         }
 
         bindClick(R.id.backResult, v -> finish());
-        bindClick(R.id.wrongHomeTab, v -> goToAndClear(HomeActivity.class));
-        bindClick(R.id.wrongMyPageTab, v -> goTo(MyPageActivity.class));
+        bindClick(R.id.wrongHomeTab, v -> switchTopLevel(HomeActivity.class));
+        bindClick(R.id.wrongMyPageTab, v -> switchTopLevel(MyPageActivity.class));
 
         if (retryQuizButton != null) {
             retryQuizButton.setOnClickListener(v -> {
@@ -102,6 +105,16 @@ public class WrongAnswerActivity extends BaseActivity {
                 }
             });
         }
+    }
+
+    private void configureHeader() {
+        View backResult = findViewById(R.id.backResult);
+        View eyebrow = findViewById(R.id.wrongAnswerEyebrow);
+        boolean openedFromResult = getIntent().hasExtra("userAnswers")
+                || getIntent().hasExtra("quizListSerializable");
+
+        backResult.setVisibility(openedFromResult ? View.VISIBLE : View.GONE);
+        eyebrow.setVisibility(openedFromResult ? View.GONE : View.VISIBLE);
     }
 
     private void loadSavedWrongAnswers() {

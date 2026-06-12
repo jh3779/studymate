@@ -21,25 +21,18 @@
             android:paddingBottom="@dimen/screen_padding">
 
             <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="안녕하세요 👋"
-                android:textColor="@color/study_text_muted"
-                android:textSize="18sp" />
+                style="@style/StudyMateHeaderEyebrow"
+                android:text="안녕하세요 👋" />
 
             <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
-                android:text="오늘도 학습해볼까요?"
-                android:textColor="@color/study_text"
-                android:textSize="28sp"
-                android:textStyle="bold" />
+                style="@style/StudyMatePageTitle"
+                android:layout_marginTop="@dimen/header_title_gap"
+                android:text="오늘도 학습해볼까요?" />
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="32dp"
+                android:layout_marginTop="@dimen/page_content_gap"
                 android:orientation="horizontal"
                 android:weightSum="3">
 
@@ -145,30 +138,23 @@
 
         <TextView
             android:id="@+id/homeTab"
+            style="@style/StudyMateBottomTabSelected"
             android:layout_width="0dp"
-            android:layout_height="match_parent"
             android:layout_weight="1"
-            android:gravity="center"
-            android:text="홈"
-            android:textColor="@color/study_text"
-            android:textStyle="bold" />
+            android:text="홈" />
 
         <TextView
             android:id="@+id/wrongTab"
+            style="@style/StudyMateBottomTab"
             android:layout_width="0dp"
-            android:layout_height="match_parent"
             android:layout_weight="1"
-            android:gravity="center"
-            android:text="오답노트"
-            android:textColor="@color/study_text_muted" />
+            android:text="오답노트" />
 
         <TextView
             android:id="@+id/myPageTab"
+            style="@style/StudyMateBottomTab"
             android:layout_width="0dp"
-            android:layout_height="match_parent"
             android:layout_weight="1"
-            android:gravity="center"
-            android:text="마이페이지"
-            android:textColor="@color/study_text_muted" />
+            android:text="마이페이지" />
     </LinearLayout>
 </LinearLayout>

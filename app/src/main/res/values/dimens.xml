@@ -2,7 +2,11 @@
 <resources>
     <dimen name="screen_padding">24dp</dimen>
     <dimen name="screen_top_padding">16dp</dimen>
-    <dimen name="section_gap">24dp</dimen>
+    <dimen name="header_row_height">48dp</dimen>
+    <dimen name="header_title_gap">4dp</dimen>
+    <dimen name="page_content_gap">24dp</dimen>
+    <dimen name="list_item_gap">12dp</dimen>
+    <dimen name="chip_gap">8dp</dimen>
     <dimen name="card_padding">18dp</dimen>
     <dimen name="button_height">56dp</dimen>
     <dimen name="field_height">56dp</dimen>

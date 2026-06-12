@@ -38,12 +38,8 @@
 
         <TextView
             android:id="@+id/summaryTitle"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:textColor="@color/study_text"
-            android:textSize="26sp"
-            android:textStyle="bold" />
+            style="@style/StudyMatePageTitle"
+            android:layout_marginTop="@dimen/header_title_gap" />
 
         <TextView
             android:id="@+id/summarySubject"
@@ -98,10 +94,12 @@
         <TextView
             android:id="@+id/quizLoadingBox"
             android:layout_width="match_parent"
-            android:layout_height="92dp"
+            android:layout_height="wrap_content"
+            android:minHeight="92dp"
             android:layout_marginTop="20dp"
             android:background="@drawable/bg_card"
             android:gravity="center"
+            android:padding="@dimen/card_padding"
             android:text="⏳ AI 퀴즈 생성 중...\n잠시만 기다려주세요"
             android:textColor="@color/study_text_muted"
             android:textSize="16sp"

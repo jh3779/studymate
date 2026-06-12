@@ -20,19 +20,15 @@
             android:text="로그인" />
 
         <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:text="이메일 인증"
-            android:textColor="@color/study_text"
-            android:textSize="30sp"
-            android:textStyle="bold" />
+            style="@style/StudyMatePageTitle"
+            android:layout_marginTop="@dimen/header_title_gap"
+            android:text="이메일 인증" />
 
         <TextView
             android:id="@+id/verificationEmailText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
+            android:layout_marginTop="@dimen/page_content_gap"
             android:background="@drawable/bg_card"
             android:padding="@dimen/card_padding"
             android:textColor="@color/study_text"
