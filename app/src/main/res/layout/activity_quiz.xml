@@ -4,7 +4,10 @@
     android:layout_height="match_parent"
     android:background="@color/study_bg"
     android:orientation="vertical"
-    android:padding="@dimen/screen_padding">
+    android:paddingStart="@dimen/screen_padding"
+    android:paddingTop="@dimen/screen_top_padding"
+    android:paddingEnd="@dimen/screen_padding"
+    android:paddingBottom="@dimen/screen_padding">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -14,13 +17,10 @@
 
         <TextView
             android:id="@+id/backSummary"
+            style="@style/StudyMateBackNavigation"
             android:layout_width="0dp"
-            android:layout_height="match_parent"
             android:layout_weight="1"
-            android:gravity="center_vertical"
-            android:text="← 요약"
-            android:textColor="@color/study_text_muted"
-            android:textSize="18sp" />
+            android:text="요약" />
 
         <TextView
             android:id="@+id/quizProgressText"
@@ -50,7 +50,7 @@
         android:id="@+id/questionText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="52dp"
+        android:layout_marginTop="36dp"
         android:textColor="@color/study_text"
         android:textSize="25sp"
         android:textStyle="bold" />

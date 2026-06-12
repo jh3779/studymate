@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="StudyMateBackNavigation">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">48dp</item>
+        <item name="android:minWidth">48dp</item>
+        <item name="android:background">?attr/selectableItemBackgroundBorderless</item>
+        <item name="android:drawableStart">@drawable/ic_arrow_back</item>
+        <item name="android:drawablePadding">8dp</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:paddingEnd">12dp</item>
+        <item name="android:textColor">@color/study_text_muted</item>
+        <item name="android:textSize">17sp</item>
+    </style>
+</resources>

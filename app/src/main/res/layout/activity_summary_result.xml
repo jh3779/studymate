@@ -2,13 +2,17 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/study_bg">
+    android:background="@color/study_bg"
+    android:fillViewport="true">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="@dimen/screen_padding">
+        android:paddingStart="@dimen/screen_padding"
+        android:paddingTop="@dimen/screen_top_padding"
+        android:paddingEnd="@dimen/screen_padding"
+        android:paddingBottom="@dimen/screen_padding">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -18,13 +22,10 @@
 
             <TextView
                 android:id="@+id/backInput"
+                style="@style/StudyMateBackNavigation"
                 android:layout_width="0dp"
-                android:layout_height="match_parent"
                 android:layout_weight="1"
-                android:gravity="center_vertical"
-                android:text="← 입력"
-                android:textColor="@color/study_text_muted"
-                android:textSize="18sp" />
+                android:text="입력" />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -39,7 +40,7 @@
             android:id="@+id/summaryTitle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="18dp"
+            android:layout_marginTop="12dp"
             android:textColor="@color/study_text"
             android:textSize="26sp"
             android:textStyle="bold" />
@@ -81,12 +82,18 @@
             android:textSize="17sp"
             android:textStyle="bold" />
 
-        <LinearLayout
-            android:id="@+id/keywordsContainer"
+        <HorizontalScrollView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
-            android:orientation="horizontal" />
+            android:scrollbars="none">
+
+            <LinearLayout
+                android:id="@+id/keywordsContainer"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal" />
+        </HorizontalScrollView>
 
         <TextView
             android:id="@+id/quizLoadingBox"

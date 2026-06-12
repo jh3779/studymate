@@ -11,18 +11,21 @@
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1">
+        android:layout_weight="1"
+        android:fillViewport="true">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="@dimen/screen_padding">
+            android:paddingStart="@dimen/screen_padding"
+            android:paddingTop="@dimen/screen_top_padding"
+            android:paddingEnd="@dimen/screen_padding"
+            android:paddingBottom="@dimen/screen_padding">
 
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="32dp"
                 android:text="마이페이지"
                 android:textColor="@color/study_text"
                 android:textSize="28sp"
@@ -48,11 +51,14 @@
                 <TextView
                     android:id="@+id/myStudyCountText"
                     android:layout_width="0dp"
-                    android:layout_height="92dp"
+                    android:layout_height="wrap_content"
+                    android:minHeight="92dp"
                     android:layout_marginEnd="8dp"
                     android:layout_weight="1"
                     android:background="@drawable/bg_card"
                     android:gravity="center"
+                    android:paddingTop="8dp"
+                    android:paddingBottom="8dp"
                     android:text="0\n학습 기록"
                     android:textColor="@color/study_text"
                     android:textSize="20sp"
@@ -61,26 +67,73 @@
                 <TextView
                     android:id="@+id/myQuizCountText"
                     android:layout_width="0dp"
-                    android:layout_height="92dp"
+                    android:layout_height="wrap_content"
+                    android:minHeight="92dp"
                     android:layout_marginStart="8dp"
                     android:layout_weight="1"
                     android:background="@drawable/bg_card"
                     android:gravity="center"
+                    android:paddingTop="8dp"
+                    android:paddingBottom="8dp"
                     android:text="0\n퀴즈 풀이"
                     android:textColor="@color/study_text"
                     android:textSize="20sp"
                     android:textStyle="bold" />
             </LinearLayout>
 
-            <TextView
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="26dp"
                 android:background="@drawable/bg_card"
-                android:padding="@dimen/card_padding"
-                android:text="앱 버전                         1.0.0 (MVP)\n\n이용 약관                         ›"
-                android:textColor="@color/study_text_muted"
-                android:textSize="17sp" />
+                android:orientation="vertical"
+                android:padding="@dimen/card_padding">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="앱 버전"
+                        android:textColor="@color/study_text_muted"
+                        android:textSize="17sp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="1.0.0 (MVP)"
+                        android:textColor="@color/study_text_muted"
+                        android:textSize="17sp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="20dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="이용 약관"
+                        android:textColor="@color/study_text_muted"
+                        android:textSize="17sp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="›"
+                        android:textColor="@color/study_text_muted"
+                        android:textSize="20sp" />
+                </LinearLayout>
+            </LinearLayout>
 
             <Button
                 android:id="@+id/logoutButton"
