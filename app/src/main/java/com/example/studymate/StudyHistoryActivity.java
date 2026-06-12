@@ -121,6 +121,7 @@ public class StudyHistoryActivity extends BaseActivity {
         intent.putExtra("title", note.getTitle());
         intent.putExtra("subject", note.getSubject());
         intent.putExtra("content", note.getOriginalText());
+        intent.putExtra("summaryEntryPoint", "history");
         intent.putStringArrayListExtra("summary", new ArrayList<>(note.getSummary()));
         intent.putStringArrayListExtra("keywords", new ArrayList<>(note.getKeywords()));
         startActivity(intent);

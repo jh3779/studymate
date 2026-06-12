@@ -148,6 +148,7 @@ public class HomeActivity extends BaseActivity {
         intent.putExtra("title", note.getTitle());
         intent.putExtra("subject", note.getSubject());
         intent.putExtra("content", note.getOriginalText());
+        intent.putExtra("summaryEntryPoint", "home");
         intent.putStringArrayListExtra("summary", new ArrayList<>(note.getSummary()));
         intent.putStringArrayListExtra("keywords", new ArrayList<>(note.getKeywords()));
         startActivity(intent);

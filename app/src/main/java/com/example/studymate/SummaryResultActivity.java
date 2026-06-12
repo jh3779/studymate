@@ -33,6 +33,7 @@ public class SummaryResultActivity extends BaseActivity {
         java.util.ArrayList<String> summary = intent.getStringArrayListExtra("summary");
         java.util.ArrayList<String> keywords = intent.getStringArrayListExtra("keywords");
         String content = intent.getStringExtra("content");
+        String summaryEntryPoint = intent.getStringExtra("summaryEntryPoint");
 
         bindSummaryData(title, subject, summary, keywords);
         quizSource = (content != null && !content.trim().isEmpty())
@@ -41,7 +42,17 @@ public class SummaryResultActivity extends BaseActivity {
                 ? android.text.TextUtils.join("\n", summary)
                 : "");
 
-        bindClick(R.id.backInput, v -> finish());
+        TextView backNavigation = findViewById(R.id.backInput);
+        if ("history".equals(summaryEntryPoint)) {
+            backNavigation.setText("학습 목록");
+            backNavigation.setOnClickListener(v -> finish());
+        } else if ("home".equals(summaryEntryPoint)) {
+            backNavigation.setText("홈");
+            backNavigation.setOnClickListener(v -> finish());
+        } else {
+            backNavigation.setText("입력");
+            backNavigation.setOnClickListener(v -> finish());
+        }
 
         createQuizButton = findViewById(R.id.createQuizButton);
         quizLoadingBox = findViewById(R.id.quizLoadingBox);
