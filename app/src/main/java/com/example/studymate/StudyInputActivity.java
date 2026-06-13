@@ -175,9 +175,16 @@ public class StudyInputActivity extends BaseActivity {
             try (InputStream input = getContentResolver().openInputStream(uri);
                  PDDocument document = PDDocument.load(input)) {
                 String text = new PDFTextStripper().getText(document);
-                runOnUiThread(() -> applyExtractedText(text, "PDF"));
+                runOnUiThread(() -> {
+                    if (isActivityActive()) {
+                        applyExtractedText(text, "PDF");
+                    }
+                });
             } catch (Exception e) {
                 runOnUiThread(() -> {
+                    if (!isActivityActive()) {
+                        return;
+                    }
                     setImporting(false, "");
                     showError("⚠ PDF 텍스트 추출에 실패했습니다. 텍스트 PDF인지 확인하거나 스캔 자료는 이미지 OCR로 가져와주세요.");
                 });
@@ -195,10 +202,15 @@ public class StudyInputActivity extends BaseActivity {
             recognizer.process(image)
                     .addOnSuccessListener(result -> {
                         recognizer.close();
-                        applyExtractedText(result.getText(), "이미지");
+                        if (isActivityActive()) {
+                            applyExtractedText(result.getText(), "이미지");
+                        }
                     })
                     .addOnFailureListener(error -> {
                         recognizer.close();
+                        if (!isActivityActive()) {
+                            return;
+                        }
                         setImporting(false, "");
                         showError("⚠ 이미지 OCR에 실패했습니다. 글자가 선명한 이미지를 선택해주세요.");
                     });
@@ -232,6 +244,10 @@ public class StudyInputActivity extends BaseActivity {
         if (importing) {
             showImportStatus(message);
         }
+    }
+
+    private boolean isActivityActive() {
+        return !isFinishing() && !isDestroyed();
     }
 
     private void updateInputEnabledState() {

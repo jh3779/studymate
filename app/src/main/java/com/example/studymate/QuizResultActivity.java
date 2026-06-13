@@ -147,7 +147,23 @@ public class QuizResultActivity extends BaseActivity {
         );
 
         List<WrongAnswerModel> wrongAnswers = buildWrongAnswers(userId);
-        viewModel.saveOutcome(firestoreService, result, wrongAnswers, wrongCount);
+        viewModel.saveOutcome(
+                firestoreService,
+                result,
+                quizIds(),
+                wrongAnswers,
+                wrongCount
+        );
+    }
+
+    private List<String> quizIds() {
+        List<String> quizIds = new ArrayList<>();
+        for (QuizModel quiz : quizList) {
+            if (quiz != null && quiz.getId() != null && !quiz.getId().trim().isEmpty()) {
+                quizIds.add(quiz.getId());
+            }
+        }
+        return quizIds;
     }
 
     private List<WrongAnswerModel> buildWrongAnswers(String userId) {

@@ -22,7 +22,6 @@
     <string name="cd_back_input">학습 입력으로 돌아가기</string>
     <string name="cd_back_summary">요약 결과로 돌아가기</string>
     <string name="cd_back_result">퀴즈 결과로 돌아가기</string>
-    <string name="cd_back_history">학습 목록으로 돌아가기</string>
     <string name="cd_back_wrong_answers">오답노트 목록으로 돌아가기</string>
     <string name="wrong_answer_back_result">결과</string>
     <string name="wrong_answer_back_list">오답노트</string>
@@ -34,8 +33,4 @@
     <string name="cd_my_stat_study">내 학습 기록 수</string>
     <string name="cd_my_stat_quiz">내 퀴즈 풀이 수</string>
     <string name="cd_my_stat_avg">내 평균 정답률</string>
-    <!-- 퀴즈 보기 -->
-    <string name="cd_option_format">보기 %1$d번: %2$s</string>
-    <!-- 앱 로고 -->
-    <string name="cd_app_logo">StudyMate 앱 로고</string>
 </resources>

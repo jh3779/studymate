@@ -101,7 +101,16 @@ public class QuizActivity extends BaseActivity {
                         optionsList.add(optsArray.getString(j));
                     }
                 }
-                int answerIndex = obj.optInt("answerIndex", 0);
+                Object rawAnswerIndex = obj.opt("answerIndex");
+                if (!(rawAnswerIndex instanceof Number)) {
+                    continue;
+                }
+                double numericAnswerIndex = ((Number) rawAnswerIndex).doubleValue();
+                if (!Double.isFinite(numericAnswerIndex)
+                        || numericAnswerIndex != Math.rint(numericAnswerIndex)) {
+                    continue;
+                }
+                int answerIndex = (int) numericAnswerIndex;
                 String explanation = obj.optString("explanation", "해설이 제공되지 않는 문제입니다.");
                 String quizId = obj.optString("id", null);
 
@@ -128,7 +137,7 @@ public class QuizActivity extends BaseActivity {
                 quizList.clear();
             }
         } catch (JSONException e) {
-            e.printStackTrace();
+            android.util.Log.w("QuizActivity", "퀴즈 JSON 파싱 실패", e);
         }
     }
 

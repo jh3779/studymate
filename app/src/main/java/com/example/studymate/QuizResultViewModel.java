@@ -8,6 +8,8 @@ import com.example.studymate.model.QuizResultModel;
 import com.example.studymate.model.WrongAnswerModel;
 import com.example.studymate.service.FirestoreService;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class QuizResultViewModel extends ViewModel {
@@ -21,6 +23,7 @@ public class QuizResultViewModel extends ViewModel {
     public void saveOutcome(
             FirestoreService firestoreService,
             QuizResultModel result,
+            List<String> quizIds,
             List<WrongAnswerModel> wrongAnswers,
             int wrongCount
     ) {
@@ -30,26 +33,33 @@ public class QuizResultViewModel extends ViewModel {
         saveStarted = true;
 
         if (wrongCount == 0) {
-            saveStatus.setValue("저장할 오답이 없습니다.");
+            saveStatus.setValue("퀴즈 결과를 저장하는 중입니다.");
         } else {
             saveStatus.setValue("오답을 오답노트에 저장하는 중입니다.");
         }
 
-        firestoreService.saveQuizOutcome(result, wrongAnswers, new FirestoreService.SaveCallback() {
-            @Override
-            public void onSuccess(String documentId) {
-                if (wrongCount == 0) {
-                    saveStatus.setValue("저장할 오답이 없습니다.");
-                } else {
-                    saveStatus.setValue("퀴즈 결과와 오답노트를 저장했습니다.");
-                }
-            }
+        firestoreService.saveQuizOutcome(
+                result,
+                quizIds == null
+                        ? Collections.emptyList()
+                        : new ArrayList<>(quizIds),
+                wrongAnswers,
+                new FirestoreService.SaveCallback() {
+                    @Override
+                    public void onSuccess(String documentId) {
+                        if (wrongCount == 0) {
+                            saveStatus.setValue("저장할 오답이 없습니다.");
+                        } else {
+                            saveStatus.setValue("퀴즈 결과와 오답노트를 저장했습니다.");
+                        }
+                    }
 
-            @Override
-            public void onFailure(String errorMessage) {
-                saveStarted = false;
-                saveStatus.setValue("저장에 실패했습니다. " + errorMessage);
-            }
-        });
+                    @Override
+                    public void onFailure(String errorMessage) {
+                        saveStarted = false;
+                        saveStatus.setValue("저장에 실패했습니다. " + errorMessage);
+                    }
+                }
+        );
     }
 }

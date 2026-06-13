@@ -24,12 +24,13 @@ git pull --ff-only origin main
 | AUTO-005 | Firestore rules 의존성 감사 | `npm run audit:firestore-rules` | 취약점 없음 또는 허용 기준 이하 | 통과 |
 | AUTO-006 | Functions 인증/호출 제한 테스트 | `npm --prefix functions test` | 전체 테스트 통과 | 통과 |
 
-최근 확인 결과:
+최근 코드 검증 결과 (2026-06-13, 의존성 감사는 lockfile 변경이 없어 기존 결과 유지):
 
 - `assembleDebug`: 통과
 - `lintDebug`: 통과
 - `testDebugUnitTest`: 통과
 - Android 핵심 로직 단위 테스트: `15 pass / 0 fail`
+- Android Lint: `0 errors / 172 warnings`
 - Firestore rules: `12 pass / 0 fail`
 - Firestore rules 의존성 감사: `0 vulnerabilities`
 - Functions 인증/호출 제한 및 응답 검증: `12 pass / 0 fail`

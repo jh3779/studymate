@@ -420,14 +420,18 @@ test("supports idempotent quiz outcome transactions and separate attempts", asyn
       throw new Error("Expected existing outcome documents");
     }
 
-    transaction.update(resultRef, {
-      correctCount: 1,
-      score: 33,
-    });
-    transaction.update(wrongRef, {
-      selectedIndex: 2,
-    });
+    transaction.set(resultRef, quizResultData({
+      correctCount: 3,
+      score: 100,
+      createdAt: resultSnapshot.data().createdAt,
+    }));
+    transaction.delete(wrongRef);
   }));
+
+  const correctedWrongAnswer = await assertSucceeds(getDoc(wrongRef));
+  if (correctedWrongAnswer.exists()) {
+    throw new Error("Expected corrected wrong answer to be removed");
+  }
 
   await assertSucceeds(
     setDoc(
@@ -445,7 +449,12 @@ test("supports idempotent quiz outcome transactions and separate attempts", asyn
   }
 
   await assertFails(getDoc(doc(bobDb, "quiz_results", "attempt-1")));
-  await assertFails(getDoc(doc(bobDb, "wrong_answers", "attempt-1_quiz-1")));
+  const deletedWrongAnswer = await assertSucceeds(
+    getDoc(doc(bobDb, "wrong_answers", "attempt-1_quiz-1"))
+  );
+  if (deletedWrongAnswer.exists()) {
+    throw new Error("Expected deleted wrong answer to stay inaccessible");
+  }
 });
 
 test("supports user-scoped ordered query contracts", async () => {
